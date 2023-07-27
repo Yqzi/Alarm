@@ -9,7 +9,7 @@ String url =
     "http://api.aladhan.com/v1/calendarByAddress/2023/7?address=$city,$state,$country&method=2";
 
 Map<String, String> headers = {
-  "X-RapidAPI-Key": "8d933572b3mshb10f7c5ca21305ep1433fbjsn10bf498e563b",
+  "X-RapidAPI-Key": "PLACE HOLEDER!!!!!!!!!!!!!!!!!!!!!!!!!",
   "X-RapidAPI-Host": "aladhan.p.rapidapi.com"
 };
 
