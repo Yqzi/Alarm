@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:alarm/prayer_time_api.dart';
 
 void main() {
   runApp(const Alarm());
@@ -12,7 +13,14 @@ class Alarm extends StatefulWidget {
 }
 
 class _AlarmState extends State<Alarm> {
-  // This widget is the root of your application.
+  late Future<PrayerTiming> futurePrayerTiming;
+
+  @override
+  void initState() {
+    super.initState();
+    futurePrayerTiming = getTimes();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -58,7 +66,22 @@ class _AlarmState extends State<Alarm> {
                     BoxDecoration(border: Border.all(color: Colors.black)),
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height - 200,
-                child: const Center(child: Text("PLACE HOLDER")),
+                child: Center(
+                  child: FutureBuilder<PrayerTiming>(
+                    future: futurePrayerTiming,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        print(snapshot.data);
+                        return Text(snapshot.data!.timings.toString());
+                      } else if (snapshot.hasError) {
+                        print('${snapshot.data}');
+                        return Text('${snapshot.error}');
+                      }
+                      print('lele');
+                      return const CircularProgressIndicator();
+                    },
+                  ),
+                ),
               ),
             ),
             SafeArea(
