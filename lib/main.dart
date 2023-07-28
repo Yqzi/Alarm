@@ -1,5 +1,7 @@
+import 'package:alarm/models/prayer_timing.dart';
 import 'package:flutter/material.dart';
-import 'package:alarm/prayer_time_api.dart';
+import 'package:location/location.dart';
+import 'package:alarm/repositories/prayer_time_api.dart';
 
 void main() {
   runApp(const Alarm());
@@ -14,11 +16,33 @@ class Alarm extends StatefulWidget {
 
 class _AlarmState extends State<Alarm> {
   late Future<PrayerTiming> futurePrayerTiming;
+  late final PrayerTimeAPI prayerTimeAPI;
 
-  @override
-  void initState() {
-    super.initState();
-    futurePrayerTiming = getTimes();
+  Future<PrayerTiming> getLocationAndPrayerTimings() async {
+    var location = Location();
+    var serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        throw "this no work";
+      }
+    }
+
+    var _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        throw "NO";
+      }
+    }
+    var currentLocation = await location.getLocation();
+
+    // TODO find
+    prayerTimeAPI = PrayerTimeAPI(
+      lat: currentLocation.latitude.toString(),
+      long: currentLocation.longitude.toString(),
+    );
+    return await prayerTimeAPI.getTimes();
   }
 
   @override
@@ -44,22 +68,6 @@ class _AlarmState extends State<Alarm> {
         ),
         body: Column(
           children: [
-            Row(
-              children: [
-                Container(
-                  decoration:
-                      BoxDecoration(border: Border.all(color: Colors.black)),
-                  width: MediaQuery.of(context).size.width / 2,
-                  child: const Center(child: Text("PLACE HOLDER")),
-                ),
-                Container(
-                  decoration:
-                      BoxDecoration(border: Border.all(color: Colors.black)),
-                  width: MediaQuery.of(context).size.width / 2,
-                  child: const Center(child: Text("PLACE HOLDER 2")),
-                ),
-              ],
-            ),
             SafeArea(
               child: Container(
                 decoration:
@@ -68,11 +76,22 @@ class _AlarmState extends State<Alarm> {
                 height: MediaQuery.of(context).size.height - 200,
                 child: Center(
                   child: FutureBuilder<PrayerTiming>(
-                    future: futurePrayerTiming,
+                    future: getLocationAndPrayerTimings(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         print(snapshot.data);
-                        return Text(snapshot.data!.timings.toString());
+                        var s = snapshot.data!;
+                        return Column(
+                          children: [
+                            Text("Fajr: ${s.fajr.format(context)}"),
+                            Text("Sunrise: ${s.sunrise.format(context)}"),
+                            Text("Dhuhr: ${s.dhuhr.format(context)}"),
+                            Text("Asr: ${s.asr.format(context)}"),
+                            Text("Maghrib: ${s.maghrib.format(context)}"),
+                            Text("Sunset: ${s.sunset.format(context)}"),
+                            Text("Isha: ${s.isha.format(context)}"),
+                          ],
+                        );
                       } else if (snapshot.hasError) {
                         print('${snapshot.data}');
                         return Text('${snapshot.error}');
