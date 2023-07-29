@@ -1,3 +1,4 @@
+import 'package:alarm/utilities.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 
@@ -25,8 +26,10 @@ class PrayerTiming {
   static String get asrName => "Asr";
   static String get maghribName => "Maghrib";
   static String get ishaName => "Isha";
-  static String get riseName => "Isha";
-  static String get setName => "Isha";
+  static String get riseName => "Sunrise";
+  static String get setName => "Sunset";
+
+  int _id = 0;
 
   factory PrayerTiming.fromJson(Map<String, dynamic> json) {
     Map<String, Object?> m = json["timings"];
@@ -43,9 +46,10 @@ class PrayerTiming {
 
   Future<void> _createPrayerReminderNotif(
       TimeOfDay schedule, String name) async {
+    _id += 1;
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
-        id: schedule.hour * 100 + schedule.minute,
+        id: _id,
         channelKey: 'scheduled_channel',
         title: '${Emojis.animals_camel} Reminder!',
         body: "Time for $name",
