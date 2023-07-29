@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 
 class PrayerTiming {
@@ -19,21 +20,79 @@ class PrayerTiming {
     required this.sunset,
   });
 
+  static String get fajrName => "Fajr";
+  static String get dhuhrName => "Dhuhr";
+  static String get asrName => "Asr";
+  static String get maghribName => "Maghrib";
+  static String get ishaName => "Isha";
+  static String get riseName => "Isha";
+  static String get setName => "Isha";
+
   factory PrayerTiming.fromJson(Map<String, dynamic> json) {
-    Map<String, Object?> m = json['data'][DateTime.now().day - 1]["timings"];
+    Map<String, Object?> m = json["timings"];
     return PrayerTiming(
-      fajr: _todayWithTime(m["Fajr"] as String),
-      dhuhr: _todayWithTime(m["Dhuhr"] as String),
-      asr: _todayWithTime(m["Asr"] as String),
-      maghrib: _todayWithTime(m["Maghrib"] as String),
-      isha: _todayWithTime(m["Isha"] as String),
-      sunrise: _todayWithTime(m["Sunrise"] as String),
-      sunset: _todayWithTime(m["Sunset"] as String),
+      fajr: _todayWithTime(m[fajrName] as String),
+      dhuhr: _todayWithTime(m[dhuhrName] as String),
+      asr: _todayWithTime(m[asrName] as String),
+      maghrib: _todayWithTime(m[maghribName] as String),
+      isha: _todayWithTime(m[ishaName] as String),
+      sunrise: _todayWithTime(m[riseName] as String),
+      sunset: _todayWithTime(m[setName] as String),
     );
+  }
+
+  Future<void> _createPrayerReminderNotif(
+      TimeOfDay schedule, String name) async {
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: schedule.hour * 100 + schedule.minute,
+        channelKey: 'scheduled_channel',
+        title: '${Emojis.animals_camel} Reminder!',
+        body: "Time for $name",
+        notificationLayout: NotificationLayout.Default,
+      ),
+      actionButtons: [
+        NotificationActionButton(
+          key: 'MARK_DONE',
+          label: "Mark Done",
+        ),
+      ],
+      schedule: NotificationCalendar(
+        hour: schedule.hour,
+        minute: schedule.minute,
+        second: 0,
+        millisecond: 0,
+      ),
+    );
+  }
+
+  void createAllNotifications() {
+    List<TimeOfDay> times = [
+      fajr,
+      dhuhr,
+      asr,
+      maghrib,
+      isha,
+      sunrise,
+      sunset,
+    ];
+    List<String> names = [
+      fajrName,
+      dhuhrName,
+      asrName,
+      maghribName,
+      ishaName,
+      riseName,
+      setName,
+    ];
+
+    for (var i = 0; i < times.length; i++) {
+      _createPrayerReminderNotif(times[i], names[i]);
+    }
   }
 }
 
 TimeOfDay _todayWithTime(String time) {
-  List<String> times = time.replaceAll("(MDT)", "").split(":");
+  List<String> times = time.split("(")[0].split(":");
   return TimeOfDay(hour: int.parse(times[0]), minute: int.parse(times[1]));
 }

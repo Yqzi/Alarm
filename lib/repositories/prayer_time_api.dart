@@ -16,7 +16,9 @@ class PrayerTimeAPI {
     final response = await http.get(Uri.parse(url), headers: headers);
 
     if (response.statusCode == 200) {
-      return PrayerTiming.fromJson(jsonDecode(response.body));
+      return PrayerTiming.fromJson(
+        jsonDecode(response.body)['data'][DateTime.now().day - 1],
+      );
     } else {
       throw Exception("failed to load times");
     }
