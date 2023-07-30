@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:alarm/models/prayer_timing.dart';
-import 'package:alarm/private.dart';
+import 'package:adhan/models/prayer_timing.dart';
+import 'package:adhan/private.dart';
 import 'package:http/http.dart' as http;
 
 class PrayerTimeAPI {
