@@ -127,7 +127,7 @@ class _DialogState extends State<_Dialog> {
       ],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(
-          Radius.circular(20),
+          Radius.circular(21),
         ),
       ),
     );
