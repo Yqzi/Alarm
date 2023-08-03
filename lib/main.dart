@@ -48,15 +48,17 @@ class _AdhanState extends State<Adhan> {
   late PrayerTimeAPI prayerTimeAPI;
   final alarmSettings = AlarmSettings(
     id: 42,
-    dateTime: DateTime.now().add(Duration(seconds: 30)),
-    assetAudioPath: 'assets/alarm.wav',
-    loopAudio: true,
+    dateTime: DateTime.now().add(Duration(seconds: 15)),
+    assetAudioPath: 'assets/001.wav',
+    loopAudio: false,
     vibrate: true,
-    fadeDuration: 0.0,
+    fadeDuration: 5.0,
     notificationBody: "body",
     notificationTitle: "title",
     enableNotificationOnKill: true,
   );
+
+  final Color _color = Color.fromRGBO(230, 230, 250, 1);
 
   Future<PrayerTiming> getLocationAndPrayerTimings() async {
     var location = Location();
@@ -64,7 +66,7 @@ class _AdhanState extends State<Adhan> {
     if (!serviceEnabled) {
       serviceEnabled = await location.requestService();
       if (!serviceEnabled) {
-        throw "this no work";
+        throw "NO";
       }
     }
 
@@ -130,7 +132,7 @@ class _AdhanState extends State<Adhan> {
   @override
   void initState() {
     super.initState();
-    // Alarm.set(alarmSettings: alarmSettings).then((value) => value);
+    Alarm.set(alarmSettings: alarmSettings).then((value) => value);
   }
 
   @override
@@ -177,8 +179,10 @@ class _AdhanState extends State<Adhan> {
                                     name: PrayerTiming.riseName,
                                     time: s.sunrise,
                                     formmatedTime: s.sunrise.format(context),
-                                    color: Color.fromRGBO(230, 230, 250, 1),
+                                    color: _color,
                                     height: 100,
+                                    fontSize: 20,
+                                    status: NotificationStatus.mute,
                                   ),
                                 ),
                                 Expanded(
@@ -186,8 +190,10 @@ class _AdhanState extends State<Adhan> {
                                     name: PrayerTiming.setName,
                                     time: s.sunset,
                                     formmatedTime: s.sunset.format(context),
-                                    color: Color.fromRGBO(230, 230, 250, 1),
+                                    color: _color,
                                     height: 100,
+                                    fontSize: 20,
+                                    status: NotificationStatus.mute,
                                   ),
                                 ),
                               ],
@@ -197,31 +203,31 @@ class _AdhanState extends State<Adhan> {
                               name: PrayerTiming.fajrName,
                               time: s.fajr,
                               formmatedTime: s.fajr.format(context),
-                              color: Color.fromRGBO(230, 230, 250, 1),
+                              color: _color,
                             ),
                             PrayerButton(
                               name: PrayerTiming.dhuhrName,
                               time: s.dhuhr,
                               formmatedTime: s.dhuhr.format(context),
-                              color: Color.fromRGBO(230, 230, 250, 1),
+                              color: _color,
                             ),
                             PrayerButton(
                               name: PrayerTiming.asrName,
                               time: s.asr,
                               formmatedTime: s.asr.format(context),
-                              color: Color.fromRGBO(230, 230, 250, 1),
+                              color: _color,
                             ),
                             PrayerButton(
                               name: PrayerTiming.maghribName,
                               time: s.maghrib,
                               formmatedTime: s.maghrib.format(context),
-                              color: Color.fromRGBO(230, 230, 250, 1),
+                              color: _color,
                             ),
                             PrayerButton(
                               name: PrayerTiming.ishaName,
                               time: s.isha,
                               formmatedTime: s.isha.format(context),
-                              color: Color.fromRGBO(230, 230, 250, 1),
+                              color: _color,
                             ),
                           ],
                         );

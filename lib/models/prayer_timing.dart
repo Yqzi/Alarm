@@ -1,14 +1,14 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:adhan/create_prayer_button.dart';
 import 'package:flutter/material.dart';
 
 class PrayerTiming {
-  final TimeOfDay fajr;
-  final TimeOfDay dhuhr;
-  final TimeOfDay asr;
-  final TimeOfDay maghrib;
-  final TimeOfDay isha;
-  final TimeOfDay sunrise;
-  final TimeOfDay sunset;
+  final Prayer fajr;
+  final Prayer dhuhr;
+  final Prayer asr;
+  final Prayer maghrib;
+  final Prayer isha;
+  final Prayer sunrise;
+  final Prayer sunset;
 
   PrayerTiming({
     required this.fajr,
@@ -28,74 +28,42 @@ class PrayerTiming {
   static String get riseName => "Sunrise";
   static String get setName => "Sunset";
 
-  int _id = 0;
-
   factory PrayerTiming.fromJson(Map<String, dynamic> json) {
     Map<String, Object?> m = json["timings"];
     return PrayerTiming(
-      fajr: _todayWithTime(m[fajrName] as String),
-      dhuhr: _todayWithTime(m[dhuhrName] as String),
-      asr: _todayWithTime(m[asrName] as String),
-      maghrib: _todayWithTime(m[maghribName] as String),
-      isha: _todayWithTime(m[ishaName] as String),
-      sunrise: _todayWithTime(m[riseName] as String),
-      sunset: _todayWithTime(m[setName] as String),
+      fajr: Prayer.name(fajrName, m, 0),
+      dhuhr: Prayer.name(dhuhrName, m, 1),
+      asr: Prayer.name(asrName, m, 2),
+      maghrib: Prayer.name(maghribName, m, 3),
+      isha: Prayer.name(ishaName, m, 4),
+      sunrise: Prayer.name(riseName, m, 5),
+      sunset: Prayer.name(setName, m, 6),
     );
-  }
-
-  Future<void> _createPrayerReminderNotif(
-      TimeOfDay schedule, String name) async {
-    _id += 1;
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: _id,
-        channelKey: 'scheduled_channel',
-        title: '${Emojis.animals_camel} Reminder!',
-        body: "Time for $name",
-        notificationLayout: NotificationLayout.Default,
-      ),
-      actionButtons: [
-        NotificationActionButton(
-          key: 'MARK_DONE',
-          label: "Mark Done",
-        ),
-      ],
-      schedule: NotificationCalendar(
-        hour: schedule.hour,
-        minute: schedule.minute,
-        second: 0,
-        millisecond: 0,
-      ),
-    );
-  }
-
-  void createAllNotifications() {
-    List<TimeOfDay> times = [
-      fajr,
-      dhuhr,
-      asr,
-      maghrib,
-      isha,
-      sunrise,
-      sunset,
-    ];
-    List<String> names = [
-      fajrName,
-      dhuhrName,
-      asrName,
-      maghribName,
-      ishaName,
-      riseName,
-      setName,
-    ];
-
-    for (var i = 0; i < times.length; i++) {
-      _createPrayerReminderNotif(times[i], names[i]);
-    }
   }
 }
 
 TimeOfDay _todayWithTime(String time) {
   List<String> times = time.split("(")[0].split(":");
   return TimeOfDay(hour: int.parse(times[0]), minute: int.parse(times[1]));
+}
+
+class Prayer {
+  final String name;
+  final TimeOfDay time;
+  final int id;
+  NotificationStatus status;
+
+  Prayer({
+    required this.name,
+    this.status = NotificationStatus.notification,
+    required this.time,
+    required this.id,
+  });
+
+  Prayer.name(
+    this.name,
+    Map<String, dynamic> m,
+    this.id, [
+    this.status = NotificationStatus.notification,
+  ]) : time = _todayWithTime(m[name] as String);
 }

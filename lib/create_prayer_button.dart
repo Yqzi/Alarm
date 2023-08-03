@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class PrayerButton extends StatelessWidget {
+class PrayerButton extends StatefulWidget {
   final TimeOfDay time;
   final String name;
   final String formmatedTime;
+  final NotificationStatus status;
   final Color? color;
   final double height;
+  final double? fontSize;
 
   const PrayerButton({
     super.key,
@@ -14,11 +17,57 @@ class PrayerButton extends StatelessWidget {
     required this.formmatedTime,
     this.color,
     this.height = 200,
+    this.fontSize = 30,
+    this.status = NotificationStatus.notification,
   });
 
-  DateTime datetime() {
+  @override
+  State<PrayerButton> createState() => _PrayerButtonState();
+}
+
+class _PrayerButtonState extends State<PrayerButton> {
+  NotificationStatus state = NotificationStatus.mute;
+  IconData icon = FontAwesomeIcons.volumeXmark;
+
+  DateTime get notifTime {
     final now = new DateTime.now();
-    return new DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    return new DateTime(
+      now.year,
+      now.month,
+      now.day,
+      widget.time.hour,
+      widget.time.minute,
+    );
+  }
+
+  @override
+  void initState() {
+    state = widget.status;
+    setIcon();
+    super.initState();
+  }
+
+  void getState(value) {
+    setState(() {
+      state = value;
+      setIcon();
+    });
+  }
+
+  void setIcon() {
+    if (state == NotificationStatus.mute) {
+      icon = FontAwesomeIcons.volumeXmark;
+
+      return;
+    }
+    if (state == NotificationStatus.notification) {
+      icon = Icons.notifications;
+      return;
+    }
+    if (state == NotificationStatus.alarm) {
+      icon = Icons.volume_up;
+      return;
+    }
   }
 
   @override
@@ -34,29 +83,42 @@ class PrayerButton extends StatelessWidget {
             showDialog(
               context: context,
               builder: (context) => _Dialog(
-                name: name,
-                formmatedTime: formmatedTime,
+                name: widget.name,
+                formmatedTime: widget.formmatedTime,
+                state: getState,
+                status: state,
               ),
             );
           },
           child: Ink.image(
             alignment: Alignment(0, 0.5),
-            height: height,
-            image: AssetImage('assets/$name.jpg'),
+            height: widget.height,
+            image: AssetImage('assets/${widget.name}.jpg'),
             fit: BoxFit.fitWidth,
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 6, left: 20),
-                child: Text(
-                  "$name - $formmatedTime",
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 20,
-                    fontFamily: "AguafinaScript",
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                      padding: const EdgeInsets.only(top: 8, right: 20),
+                      child: Icon(icon, color: widget.color)),
+                ),
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 6, left: 20),
+                    child: Text(
+                      "${widget.name} - ${widget.formmatedTime}",
+                      style: TextStyle(
+                        color: widget.color,
+                        fontSize: widget.fontSize,
+                        fontFamily: "AguafinaScript",
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -65,28 +127,39 @@ class PrayerButton extends StatelessWidget {
   }
 }
 
-enum Boxes { alarm, notification, mute }
+enum NotificationStatus { alarm, notification, mute }
 
 class _Dialog extends StatefulWidget {
   const _Dialog({
-    super.key,
     required this.name,
     required this.formmatedTime,
+    required this.state,
+    required this.status,
   });
 
   final String name;
   final String formmatedTime;
+  final void Function(dynamic) state;
+  final NotificationStatus status;
 
   @override
   State<_Dialog> createState() => _DialogState();
 }
 
 class _DialogState extends State<_Dialog> {
-  Boxes status = Boxes.mute;
-  void boxSelected(Boxes box) {
+  NotificationStatus status = NotificationStatus.notification;
+
+  void boxSelected(NotificationStatus box) {
     setState(() {
       status = box;
+      widget.state(status);
     });
+  }
+
+  @override
+  void initState() {
+    status = widget.status;
+    super.initState();
   }
 
   @override
@@ -98,26 +171,28 @@ class _DialogState extends State<_Dialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _CheckBox(
-              onPressed: () => boxSelected(Boxes.alarm),
+              onPressed: () => boxSelected(NotificationStatus.alarm),
               name: "Alarm",
-              isSelected: status == Boxes.alarm,
+              isSelected: status == NotificationStatus.alarm,
             ),
             SizedBox(height: 5),
             _CheckBox(
-              onPressed: () => boxSelected(Boxes.notification),
+              onPressed: () => boxSelected(NotificationStatus.notification),
               name: "Notification",
-              isSelected: status == Boxes.notification,
+              isSelected: status == NotificationStatus.notification,
             ),
             SizedBox(height: 5),
             _CheckBox(
-              onPressed: () => boxSelected(Boxes.mute),
+              onPressed: () => boxSelected(NotificationStatus.mute),
               name: "Mute",
-              isSelected: status == Boxes.mute,
+              isSelected: status == NotificationStatus.mute,
             ),
             SizedBox(height: 5),
             Divider(),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pop(context);
+              },
               child: Center(
                 child: const Text('DONE'),
               ),
