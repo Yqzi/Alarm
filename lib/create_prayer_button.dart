@@ -1,24 +1,21 @@
+import 'package:adhan/models/prayer_timing.dart';
+import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 
 class PrayerButton extends StatefulWidget {
-  final TimeOfDay time;
-  final String name;
-  final String formmatedTime;
-  final NotificationStatus status;
+  final Prayer prayer;
   final Color? color;
   final double height;
   final double? fontSize;
 
   const PrayerButton({
     super.key,
-    required this.time,
-    required this.name,
-    required this.formmatedTime,
     this.color,
     this.height = 200,
     this.fontSize = 30,
-    this.status = NotificationStatus.notification,
+    required this.prayer,
   });
 
   @override
@@ -30,20 +27,25 @@ class _PrayerButtonState extends State<PrayerButton> {
   IconData icon = FontAwesomeIcons.volumeXmark;
 
   DateTime get notifTime {
-    final now = new DateTime.now();
-    return new DateTime(
+    final now = DateTime.now();
+    return DateTime(
       now.year,
       now.month,
       now.day,
-      widget.time.hour,
-      widget.time.minute,
+      now.hour,
+      now.minute,
+      now.second + 10,
+      // widget.prayer.time.hour,
+      // widget.prayer.time.minute,
     );
   }
 
   @override
   void initState() {
-    state = widget.status;
-    setIcon();
+    state = widget.prayer.status;
+    setState(() {
+      setIcon();
+    });
     super.initState();
   }
 
@@ -54,18 +56,69 @@ class _PrayerButtonState extends State<PrayerButton> {
     });
   }
 
+  void create_alarm() async {
+    await AwesomeNotifications().cancel(widget.prayer.id);
+    await Alarm.set(
+      alarmSettings: AlarmSettings(
+        id: widget.prayer.id,
+        dateTime: notifTime,
+        assetAudioPath: 'assets/001.wav',
+        loopAudio: false,
+        vibrate: false,
+        fadeDuration: 5.0,
+        notificationTitle: "Press to cancel alarm.",
+        notificationBody: widget.prayer.name == "Sunrise" ||
+                widget.prayer.name == "Sunset"
+            ? "The sun is making it's move... or is it us???"
+            : "It is time for ${widget.prayer.name}!!! Click me to stop the alarm.",
+      ),
+    );
+  }
+
+  void create_notif() async {
+    await Alarm.stop(widget.prayer.id);
+
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: widget.prayer.id,
+        channelKey: 'scheduled_channel',
+        title: widget.prayer.name,
+        body: widget.prayer.name == "Sunrise"
+            ? "Who's gonna carry the boats?"
+            : widget.prayer.name == "Sunset"
+                ? "The sun has fallen"
+                : "It is time for Salat",
+        notificationLayout: NotificationLayout.Default,
+      ),
+      schedule: NotificationCalendar(
+        day: notifTime.day,
+        hour: notifTime.hour,
+        minute: notifTime.minute,
+        second: 0,
+        millisecond: 0,
+      ),
+    );
+  }
+
+  void create_mute() {
+    Alarm.stop(widget.prayer.id);
+    AwesomeNotifications().cancel(widget.prayer.id);
+  }
+
   void setIcon() {
     if (state == NotificationStatus.mute) {
       icon = FontAwesomeIcons.volumeXmark;
-
+      create_mute();
       return;
     }
     if (state == NotificationStatus.notification) {
       icon = Icons.notifications;
+      create_notif();
       return;
     }
     if (state == NotificationStatus.alarm) {
       icon = Icons.volume_up;
+      create_alarm();
       return;
     }
   }
@@ -83,8 +136,8 @@ class _PrayerButtonState extends State<PrayerButton> {
             showDialog(
               context: context,
               builder: (context) => _Dialog(
-                name: widget.name,
-                formmatedTime: widget.formmatedTime,
+                name: widget.prayer.name,
+                formmatedTime: widget.prayer.time.format(context),
                 state: getState,
                 status: state,
               ),
@@ -93,7 +146,7 @@ class _PrayerButtonState extends State<PrayerButton> {
           child: Ink.image(
             alignment: Alignment(0, 0.5),
             height: widget.height,
-            image: AssetImage('assets/${widget.name}.jpg'),
+            image: AssetImage('assets/${widget.prayer.name}.jpg'),
             fit: BoxFit.fitWidth,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -109,7 +162,7 @@ class _PrayerButtonState extends State<PrayerButton> {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 6, left: 20),
                     child: Text(
-                      "${widget.name} - ${widget.formmatedTime}",
+                      "${widget.prayer.name} - ${widget.prayer.time.format(context)}",
                       style: TextStyle(
                         color: widget.color,
                         fontSize: widget.fontSize,
@@ -214,7 +267,6 @@ class _CheckBox extends StatelessWidget {
   final bool isSelected;
   final void Function() onPressed;
   const _CheckBox({
-    super.key,
     required this.name,
     required this.isSelected,
     required this.onPressed,

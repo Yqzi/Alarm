@@ -4,7 +4,6 @@ import 'package:location/location.dart';
 import 'package:adhan/repositories/prayer_time_api.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:alarm/alarm.dart';
-
 import 'create_prayer_button.dart';
 
 void main() async {
@@ -12,22 +11,14 @@ void main() async {
     null,
     [
       NotificationChannel(
-        channelKey: 'basic_channel',
-        channelName: 'basic Notifications',
-        defaultColor: Colors.teal,
-        importance: NotificationImportance.High,
-        channelShowBadge: true,
-        channelDescription: null,
-      ),
-      NotificationChannel(
         channelKey: 'scheduled_channel',
         channelName: 'Scheduled Notifications',
         defaultColor: Colors.teal,
         locked: true,
-        importance: NotificationImportance.High,
+        importance: NotificationImportance.Max,
         channelShowBadge: true,
         channelDescription: null,
-      )
+      ),
     ],
   );
 
@@ -46,17 +37,6 @@ class Adhan extends StatefulWidget {
 class _AdhanState extends State<Adhan> {
   late Future<PrayerTiming> futurePrayerTiming;
   late PrayerTimeAPI prayerTimeAPI;
-  final alarmSettings = AlarmSettings(
-    id: 42,
-    dateTime: DateTime.now().add(Duration(seconds: 15)),
-    assetAudioPath: 'assets/001.wav',
-    loopAudio: false,
-    vibrate: true,
-    fadeDuration: 5.0,
-    notificationBody: "body",
-    notificationTitle: "title",
-    enableNotificationOnKill: true,
-  );
 
   final Color _color = Color.fromRGBO(230, 230, 250, 1);
 
@@ -79,7 +59,6 @@ class _AdhanState extends State<Adhan> {
     }
     var currentLocation = await location.getLocation();
 
-    // TODO find
     prayerTimeAPI = PrayerTimeAPI(
       lat: currentLocation.latitude.toString(),
       long: currentLocation.longitude.toString(),
@@ -130,12 +109,6 @@ class _AdhanState extends State<Adhan> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    Alarm.set(alarmSettings: alarmSettings).then((value) => value);
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFf9f9f9),
@@ -169,64 +142,47 @@ class _AdhanState extends State<Adhan> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         var s = snapshot.data!;
-                        // s.createAllNotifications();
                         return Column(
                           children: [
                             Row(
                               children: [
                                 Expanded(
                                   child: PrayerButton(
-                                    name: PrayerTiming.riseName,
-                                    time: s.sunrise,
-                                    formmatedTime: s.sunrise.format(context),
+                                    prayer: s.sunrise,
                                     color: _color,
                                     height: 100,
                                     fontSize: 20,
-                                    status: NotificationStatus.mute,
                                   ),
                                 ),
                                 Expanded(
                                   child: PrayerButton(
-                                    name: PrayerTiming.setName,
-                                    time: s.sunset,
-                                    formmatedTime: s.sunset.format(context),
+                                    prayer: s.sunset,
                                     color: _color,
                                     height: 100,
                                     fontSize: 20,
-                                    status: NotificationStatus.mute,
                                   ),
                                 ),
                               ],
                             ),
                             Divider(),
                             PrayerButton(
-                              name: PrayerTiming.fajrName,
-                              time: s.fajr,
-                              formmatedTime: s.fajr.format(context),
+                              prayer: s.fajr,
                               color: _color,
                             ),
                             PrayerButton(
-                              name: PrayerTiming.dhuhrName,
-                              time: s.dhuhr,
-                              formmatedTime: s.dhuhr.format(context),
+                              prayer: s.dhuhr,
                               color: _color,
                             ),
                             PrayerButton(
-                              name: PrayerTiming.asrName,
-                              time: s.asr,
-                              formmatedTime: s.asr.format(context),
+                              prayer: s.asr,
                               color: _color,
                             ),
                             PrayerButton(
-                              name: PrayerTiming.maghribName,
-                              time: s.maghrib,
-                              formmatedTime: s.maghrib.format(context),
+                              prayer: s.maghrib,
                               color: _color,
                             ),
                             PrayerButton(
-                              name: PrayerTiming.ishaName,
-                              time: s.isha,
-                              formmatedTime: s.isha.format(context),
+                              prayer: s.isha,
                               color: _color,
                             ),
                           ],
