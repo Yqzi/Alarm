@@ -72,5 +72,13 @@ class PrayerTimeAPI {
   }
 
   // static Future<bool> isConnectedOnline() async {
+  //   bool hasInternet = await InternetConnectionChecker().hasConnection;
+  //   ConnectivityResult result = await Connectivity().checkConnectivity();
+
+  //   if (result == ConnectivityResult.wifi) {
+  //     return true;
+  //   }
+
+  //   return false;
   // }
 }
