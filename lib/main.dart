@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:adhan/models/prayer_timing.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:location/location.dart';
@@ -39,19 +38,18 @@ class Adhan extends StatefulWidget {
 }
 
 class _AdhanState extends State<Adhan> {
-  late Future<PrayerTiming> futurePrayerTiming;
   late PrayerTimeAPI prayerTimeAPI;
   bool hasInternet = false;
+
+  late Future<PrayerTiming> futureTimings;
 
   @override
   void initState() {
     super.initState();
     InternetConnectionChecker().onStatusChange.listen((event) {
-      final hasInternet = event == InternetConnectionStatus.connected;
-      setState(() {
-        this.hasInternet = hasInternet;
-      });
+      hasInternet = event == InternetConnectionStatus.connected;
     });
+    futureTimings = getLocationAndPrayerTimings(shouldClear);
   }
 
   bool shouldClear = false;
@@ -100,7 +98,7 @@ class _AdhanState extends State<Adhan> {
     }
     // done toerh
 
-    isLoading = false;
+    setState(() => isLoading = false);
     return await prayerTimeAPI.getTimes();
   }
 
@@ -158,9 +156,11 @@ class _AdhanState extends State<Adhan> {
         ),
       ),
       body: RefreshIndicator(
+        displacement: 20,
         onRefresh: () async {
           shouldClear = true;
           isLoading = true;
+          futureTimings = getLocationAndPrayerTimings(shouldClear);
           setState(() => null);
         },
         child: ListView(
@@ -172,9 +172,10 @@ class _AdhanState extends State<Adhan> {
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: Column(
                 children: [
+                  if (isLoading) LinearProgressIndicator(),
                   Center(
                     child: FutureBuilder<PrayerTiming>(
-                      future: getLocationAndPrayerTimings(shouldClear),
+                      future: futureTimings,
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           var s = snapshot.data!;
@@ -224,11 +225,9 @@ class _AdhanState extends State<Adhan> {
                             ],
                           );
                         } else if (snapshot.hasError) {
-                          return isLoading
-                              ? LinearProgressIndicator()
-                              : Text('${snapshot.error}');
+                          return Text('${snapshot.error}');
                         }
-                        return const CircularProgressIndicator();
+                        return const Column();
                       },
                     ),
                   ),

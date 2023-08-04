@@ -2,11 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:adhan/models/prayer_timing.dart';
 import 'package:adhan/private.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 class PrayerTimeAPI {
   final String lat;
@@ -23,7 +20,8 @@ class PrayerTimeAPI {
   void saveCache(String s) async {
     final directory = await getApplicationDocumentsDirectory();
     final path = directory.path;
-    await File('$path/$fileName').writeAsString(s);
+    final File file = File('$path/$fileName');
+    await file.writeAsString(s);
   }
 
   Future<PrayerTiming> getTimes() async {
@@ -32,7 +30,7 @@ class PrayerTimeAPI {
     bool shouldOnline = rb == null || rb == '';
 
     if (!shouldOnline) {
-      shouldOnline = jsonDecode(rb!)['${_now.year}'] == null;
+      shouldOnline = jsonDecode(rb)['${_now.year}'] == null;
     }
 
     if (shouldOnline) {
@@ -57,7 +55,6 @@ class PrayerTimeAPI {
 
     if (await file.exists()) {
       String s = await file.readAsString();
-      print(s);
       return s;
     }
 
@@ -70,15 +67,4 @@ class PrayerTimeAPI {
     final File file = await File('$path/$fileName');
     if (file.existsSync()) await file.delete();
   }
-
-  // static Future<bool> isConnectedOnline() async {
-  //   bool hasInternet = await InternetConnectionChecker().hasConnection;
-  //   ConnectivityResult result = await Connectivity().checkConnectivity();
-
-  //   if (result == ConnectivityResult.wifi) {
-  //     return true;
-  //   }
-
-  //   return false;
-  // }
 }
