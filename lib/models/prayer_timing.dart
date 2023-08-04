@@ -28,8 +28,8 @@ class PrayerTiming {
   static String get riseName => "Sunrise";
   static String get setName => "Sunset";
 
-  factory PrayerTiming.fromJson(Map<String, dynamic> json) {
-    Map<String, Object?> m = json["timings"];
+  factory PrayerTiming.fromJson(Map<String, dynamic> j) {
+    Map<String, Object?> m = j["timings"];
     return PrayerTiming(
       fajr: Prayer.name(fajrName, m, 0),
       dhuhr: Prayer.name(dhuhrName, m, 1),

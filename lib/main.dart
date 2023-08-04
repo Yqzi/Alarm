@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:adhan/models/prayer_timing.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:location/location.dart';
 import 'package:adhan/repositories/prayer_time_api.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -37,10 +41,34 @@ class Adhan extends StatefulWidget {
 class _AdhanState extends State<Adhan> {
   late Future<PrayerTiming> futurePrayerTiming;
   late PrayerTimeAPI prayerTimeAPI;
+  bool hasInternet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    InternetConnectionChecker().onStatusChange.listen((event) {
+      final hasInternet = event == InternetConnectionStatus.connected;
+      setState(() {
+        this.hasInternet = hasInternet;
+      });
+    });
+  }
+
+  bool shouldClear = false;
+  bool isLoading = true;
 
   final Color _color = Color.fromRGBO(230, 230, 250, 1);
 
-  Future<PrayerTiming> getLocationAndPrayerTimings() async {
+  Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
+    bool online = false;
+
+    online = hasInternet;
+    print(online);
+
+    if (clear && online) PrayerTimeAPI.clearCache();
+    print(online);
+    shouldClear = false;
+
     var location = Location();
     var serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) {
@@ -72,6 +100,7 @@ class _AdhanState extends State<Adhan> {
     }
     // done toerh
 
+    isLoading = false;
     return await prayerTimeAPI.getTimes();
   }
 
@@ -128,76 +157,86 @@ class _AdhanState extends State<Adhan> {
           onPressed: () {},
         ),
       ),
-      body: ListView(
-        children: [
-          Container(
-            decoration: BoxDecoration(border: Border.all(color: Colors.black)),
-            padding: const EdgeInsets.all(8),
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              children: [
-                Center(
-                  child: FutureBuilder<PrayerTiming>(
-                    future: getLocationAndPrayerTimings(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        var s = snapshot.data!;
-                        return Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: PrayerButton(
-                                    prayer: s.sunrise,
-                                    color: _color,
-                                    height: 100,
-                                    fontSize: 20,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          shouldClear = true;
+          isLoading = true;
+          setState(() => null);
+        },
+        child: ListView(
+          children: [
+            Container(
+              decoration:
+                  BoxDecoration(border: Border.all(color: Colors.black)),
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                children: [
+                  Center(
+                    child: FutureBuilder<PrayerTiming>(
+                      future: getLocationAndPrayerTimings(shouldClear),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var s = snapshot.data!;
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: PrayerButton(
+                                      prayer: s.sunrise,
+                                      color: _color,
+                                      height: 100,
+                                      fontSize: 20,
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: PrayerButton(
-                                    prayer: s.sunset,
-                                    color: _color,
-                                    height: 100,
-                                    fontSize: 20,
+                                  Expanded(
+                                    child: PrayerButton(
+                                      prayer: s.sunset,
+                                      color: _color,
+                                      height: 100,
+                                      fontSize: 20,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Divider(),
-                            PrayerButton(
-                              prayer: s.fajr,
-                              color: _color,
-                            ),
-                            PrayerButton(
-                              prayer: s.dhuhr,
-                              color: _color,
-                            ),
-                            PrayerButton(
-                              prayer: s.asr,
-                              color: _color,
-                            ),
-                            PrayerButton(
-                              prayer: s.maghrib,
-                              color: _color,
-                            ),
-                            PrayerButton(
-                              prayer: s.isha,
-                              color: _color,
-                            ),
-                          ],
-                        );
-                      } else if (snapshot.hasError) {
-                        return Text('${snapshot.error}');
-                      }
-                      return const CircularProgressIndicator();
-                    },
+                                ],
+                              ),
+                              Divider(),
+                              PrayerButton(
+                                prayer: s.fajr,
+                                color: _color,
+                              ),
+                              PrayerButton(
+                                prayer: s.dhuhr,
+                                color: _color,
+                              ),
+                              PrayerButton(
+                                prayer: s.asr,
+                                color: _color,
+                              ),
+                              PrayerButton(
+                                prayer: s.maghrib,
+                                color: _color,
+                              ),
+                              PrayerButton(
+                                prayer: s.isha,
+                                color: _color,
+                              ),
+                            ],
+                          );
+                        } else if (snapshot.hasError) {
+                          return isLoading
+                              ? LinearProgressIndicator()
+                              : Text('${snapshot.error}');
+                        }
+                        return const CircularProgressIndicator();
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

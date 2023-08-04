@@ -32,11 +32,11 @@ class _PrayerButtonState extends State<PrayerButton> {
       now.year,
       now.month,
       now.day,
-      now.hour,
-      now.minute,
-      now.second + 10,
-      // widget.prayer.time.hour,
-      // widget.prayer.time.minute,
+      // now.hour,
+      // now.minute,
+      // now.second + 10,
+      widget.prayer.time.hour,
+      widget.prayer.time.minute,
     );
   }
 

@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:adhan/models/prayer_timing.dart';
 import 'package:adhan/private.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class PrayerTimeAPI {
   final String lat;
@@ -9,18 +12,68 @@ class PrayerTimeAPI {
 
   PrayerTimeAPI({required this.lat, required this.long});
 
+  DateTime get _now => DateTime.now();
+
   String get url =>
-      "https://api.aladhan.com/v1/calendar/2023/7?latitude=$lat&longitude=$long&method=2";
+      "https://api.aladhan.com/v1/calendar/${_now.year}?latitude=$lat&longitude=$long&method=2";
+  static String fileName = 'prayerTimings';
+
+  void saveCache(String s) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final path = directory.path;
+    await File('$path/$fileName').writeAsString(s);
+  }
 
   Future<PrayerTiming> getTimes() async {
-    final response = await http.get(Uri.parse(url), headers: headers);
+    String? rb = await getCachedTimes();
 
-    if (response.statusCode == 200) {
-      return PrayerTiming.fromJson(
-        jsonDecode(response.body)['data'][DateTime.now().day - 1],
-      );
-    } else {
-      throw Exception("failed to load times");
+    bool shouldOnline = rb == null || rb == '';
+
+    if (!shouldOnline) {
+      shouldOnline = jsonDecode(rb!)['${_now.year}'] == null;
     }
+
+    if (shouldOnline) {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode != 200) {
+        throw Exception("failed to load times");
+      }
+
+      rb = '{"${_now.year}": ${response.body}}';
+      saveCache(rb);
+    }
+
+    return PrayerTiming.fromJson(
+      jsonDecode(rb!)['${_now.year}']['data']['${_now.month}'][_now.day - 1],
+    );
+  }
+
+  Future<String?> getCachedTimes() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final path = directory.path;
+    final File file = await File('$path/$fileName');
+
+    if (await file.exists()) {
+      String s = await file.readAsString();
+      print(s);
+      return s;
+    }
+
+    return null;
+  }
+
+  static void clearCache() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final path = directory.path;
+    final File file = await File('$path/$fileName');
+    if (file.existsSync()) await file.delete();
+  }
+
+  static Future<bool> isConnectedOnline() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.wifi) {
+      return true;
+    }
+    return false;
   }
 }
