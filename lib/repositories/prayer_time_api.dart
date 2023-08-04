@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:adhan/models/prayer_timing.dart';
 import 'package:adhan/private.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 class PrayerTimeAPI {
   final String lat;
@@ -69,11 +71,6 @@ class PrayerTimeAPI {
     if (file.existsSync()) await file.delete();
   }
 
-  static Future<bool> isConnectedOnline() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.wifi) {
-      return true;
-    }
-    return false;
-  }
+  // static Future<bool> isConnectedOnline() async {
+  // }
 }
