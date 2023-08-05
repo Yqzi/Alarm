@@ -182,6 +182,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_alarm_clock:
+    dependency: "direct main"
+    description:
+      name: flutter_alarm_clock
+      sha256: "670b047839d2e1e85106798f7ce610723ea2e022073ef82dd16c4def3970f1e4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   flutter_fgbg:
     dependency: transitive
     description:
@@ -199,7 +207,7 @@ packages:
     source: hosted
     version: "0.13.1"
   flutter_local_notifications:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_local_notifications
       sha256: aea96b3b78556c97607d9bee59fcec515bc3ec1b6e905f14d72906ae055033fa
@@ -273,7 +281,7 @@ packages:
     source: hosted
     version: "1.0.0+1"
   intl:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: intl
       sha256: "910f85bce16fb5c6f614e117efa303e85a1731bb0081edf3604a2ae6e9a3cc91"
@@ -574,7 +582,7 @@ packages:
     source: hosted
     version: "0.5.1"
   timezone:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: timezone
       sha256: "1cfd8ddc2d1cfd836bc93e67b9be88c3adaeca6f40a00ca999104c30693cdca0"

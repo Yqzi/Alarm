@@ -36,8 +36,8 @@ class PrayerTiming {
       asr: Prayer.name(asrName, m, 2),
       maghrib: Prayer.name(maghribName, m, 3),
       isha: Prayer.name(ishaName, m, 4),
-      sunrise: Prayer.name(riseName, m, 5),
-      sunset: Prayer.name(setName, m, 6),
+      sunrise: Prayer.name(riseName, m, 5, NotificationStatus.mute),
+      sunset: Prayer.name(setName, m, 6, NotificationStatus.mute),
     );
   }
 }
