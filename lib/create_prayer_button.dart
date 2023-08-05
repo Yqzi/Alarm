@@ -1,9 +1,7 @@
 import 'package:adhan/models/prayer_timing.dart';
-import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:timezone/timezone.dart';
 
 class PrayerButton extends StatefulWidget {
@@ -60,24 +58,24 @@ class _PrayerButtonState extends State<PrayerButton> {
     });
   }
 
-  void create_alarm() async {
-    await AwesomeNotifications().cancel(widget.prayer.id);
-    await Alarm.set(
-      alarmSettings: AlarmSettings(
-        id: widget.prayer.id,
-        dateTime: notifTime,
-        assetAudioPath: 'assets/001.wav',
-        loopAudio: false,
-        vibrate: false,
-        fadeDuration: 5.0,
-        notificationTitle: "Press to cancel alarm.",
-        notificationBody: widget.prayer.name == "Sunrise" ||
-                widget.prayer.name == "Sunset"
-            ? "The sun is making it's move... or is it us???"
-            : "It is time for ${widget.prayer.name}!!! Click me to stop the alarm.",
-      ),
-    );
-  }
+  // void create_alarm() async {
+  //   await AwesomeNotifications().cancel(widget.prayer.id);
+  //   await Alarm.set(
+  //     alarmSettings: AlarmSettings(
+  //       id: widget.prayer.id,
+  //       dateTime: notifTime,
+  //       assetAudioPath: 'assets/001.wav',
+  //       loopAudio: false,
+  //       vibrate: false,
+  //       fadeDuration: 5.0,
+  //       notificationTitle: "Press to cancel alarm.",
+  //       notificationBody: widget.prayer.name == "Sunrise" ||
+  //               widget.prayer.name == "Sunset"
+  //           ? "The sun is making it's move... or is it us???"
+  //           : "It is time for ${widget.prayer.name}!!! Click me to stop the alarm.",
+  //     ),
+  //   );
+  // }
 
   // void create_notif() async {
   //   await Alarm.stop(widget.prayer.id);
@@ -108,15 +106,16 @@ class _PrayerButtonState extends State<PrayerButton> {
 
   void omnipotentNotif(bool sound) async {
     notif.scheduleNotification(
-        widget.prayer.name,
-        widget.prayer.name == "Sunrise"
-            ? "Who's gonna carry the boats?"
-            : widget.prayer.name == "Sunset"
-                ? "The sun has fallen"
-                : "It is time for Salat",
-        notifTime,
-        id: widget.prayer.id,
-        sound: sound);
+      widget.prayer.name,
+      widget.prayer.name == "Sunrise"
+          ? "Who's gonna carry the boats?"
+          : widget.prayer.name == "Sunset"
+              ? "The sun has fallen"
+              : "It is time for Salat",
+      notifTime,
+      id: widget.prayer.id,
+      sound: sound,
+    );
   }
 
   void setIcon() {
