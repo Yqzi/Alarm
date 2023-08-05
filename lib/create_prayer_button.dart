@@ -43,11 +43,15 @@ class _PrayerButtonState extends State<PrayerButton> {
 
   @override
   void initState() {
-    notif.initializeNotification();
+    print(widget.prayer.time);
     state = widget.prayer.status;
-    setState(() {
-      setIcon();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      await notif.initializeNotification();
+      setState(() {
+        setIcon();
+      });
     });
+
     super.initState();
   }
 
@@ -57,48 +61,6 @@ class _PrayerButtonState extends State<PrayerButton> {
       setIcon();
     });
   }
-
-  // void create_alarm() async {
-  //   await AwesomeNotifications().cancel(widget.prayer.id);
-  //   await Alarm.set(
-  //     alarmSettings: AlarmSettings(
-  //       id: widget.prayer.id,
-  //       dateTime: notifTime,
-  //       assetAudioPath: 'assets/001.wav',
-  //       loopAudio: false,
-  //       vibrate: false,
-  //       fadeDuration: 5.0,
-  //       notificationTitle: "Press to cancel alarm.",
-  //       notificationBody: widget.prayer.name == "Sunrise" ||
-  //               widget.prayer.name == "Sunset"
-  //           ? "The sun is making it's move... or is it us???"
-  //           : "It is time for ${widget.prayer.name}!!! Click me to stop the alarm.",
-  //     ),
-  //   );
-  // }
-
-  // void create_notif() async {
-  //   await Alarm.stop(widget.prayer.id);
-
-  //   await AwesomeNotifications().createNotification(
-  //     content: NotificationContent(
-  //       id: widget.prayer.id,
-  //       channelKey: 'scheduled_channel',
-  //       title: widget.prayer.name,
-  //       body: widget.prayer.name == "Sunrise"
-  //           ? "Who's gonna carry the boats?"
-  //           : widget.prayer.name == "Sunset"
-  //               ? "The sun has fallen"
-  //               : "It is time for Salat",
-  //       notificationLayout: NotificationLayout.Default,
-  //     ),
-  //     schedule: NotificationCalendar(
-  //       day: notifTime.day,
-  //       hour: notifTime.hour,
-  //       minute: notifTime.minute,
-  //     ),
-  //   );
-  // }
 
   void create_mute() async {
     (await Notif._flutterLocalNotificationsPlugin).cancel(widget.prayer.id);
@@ -132,7 +94,6 @@ class _PrayerButtonState extends State<PrayerButton> {
     if (state == NotificationStatus.alarm) {
       icon = Icons.volume_up;
       omnipotentNotif(true);
-      // create_alarm();
       return;
     }
   }
@@ -321,13 +282,13 @@ class Notif {
   final AndroidInitializationSettings _androidInitializationSettings =
       AndroidInitializationSettings('mipmap/ic_launcher');
 
-  void initializeNotification() async {
+  Future<void> initializeNotification() async {
     InitializationSettings initializationSettings =
         InitializationSettings(android: _androidInitializationSettings);
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  void scheduleNotification(
+  Future<void> scheduleNotification(
     String title,
     String body,
     DateTime time, {

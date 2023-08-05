@@ -21,7 +21,6 @@ class Adhan extends StatefulWidget {
 
 class _AdhanState extends State<Adhan> {
   final Color _color = Color.fromRGBO(230, 230, 250, 1);
-  late PrayerTimeAPI prayerTimeAPI;
   late Future<PrayerTiming> futureTimings;
   bool hasInternet = false;
   bool shouldClear = false;
@@ -64,7 +63,7 @@ class _AdhanState extends State<Adhan> {
     }
     var currentLocation = await location.getLocation();
 
-    prayerTimeAPI = PrayerTimeAPI(
+    final PrayerTimeAPI prayerTimeAPI = PrayerTimeAPI(
       lat: currentLocation.latitude.toString(),
       long: currentLocation.longitude.toString(),
     );
