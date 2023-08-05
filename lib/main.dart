@@ -20,9 +20,12 @@ class Adhan extends StatefulWidget {
 }
 
 class _AdhanState extends State<Adhan> {
+  final Color _color = Color.fromRGBO(230, 230, 250, 1);
   late PrayerTimeAPI prayerTimeAPI;
   late Future<PrayerTiming> futureTimings;
   bool hasInternet = false;
+  bool shouldClear = false;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -32,11 +35,6 @@ class _AdhanState extends State<Adhan> {
     });
     futureTimings = getLocationAndPrayerTimings(shouldClear);
   }
-
-  bool shouldClear = false;
-  bool isLoading = true;
-
-  final Color _color = Color.fromRGBO(230, 230, 250, 1);
 
   Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
     bool online = false;
