@@ -21,9 +21,8 @@ class Adhan extends StatefulWidget {
 
 class _AdhanState extends State<Adhan> {
   late PrayerTimeAPI prayerTimeAPI;
-  bool hasInternet = false;
-
   late Future<PrayerTiming> futureTimings;
+  bool hasInternet = false;
 
   @override
   void initState() {
