@@ -6,27 +6,9 @@ import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:location/location.dart';
 import 'package:adhan/repositories/prayer_time_api.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:alarm/alarm.dart';
 import 'create_prayer_button.dart';
 
 void main() async {
-  AwesomeNotifications().initialize(
-    null,
-    [
-      NotificationChannel(
-        channelKey: 'scheduled_channel',
-        channelName: 'Scheduled Notifications',
-        defaultColor: Colors.teal,
-        locked: true,
-        importance: NotificationImportance.Max,
-        channelShowBadge: true,
-        channelDescription: null,
-      ),
-    ],
-  );
-
-  await Alarm.init();
-
   runApp(const MaterialApp(home: Adhan()));
 }
 
