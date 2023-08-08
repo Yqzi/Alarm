@@ -1,9 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.alarm">
+    
+    <!-- <uses-permission android:minSdkVersion="34" android:name="android.permission.USE_EXACT_ALARM" /> -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <!-- For apps with targetSDK=31 (Android 12) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
+        tools:replace="android:label"
         android:label="Adhan"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

@@ -1,15 +1,60 @@
 import 'dart:async';
 
 import 'package:adhan/models/prayer_timing.dart';
+import 'package:adhan/repositories/notification.dart';
+import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:location/location.dart';
 import 'package:adhan/repositories/prayer_time_api.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:timezone/data/latest.dart';
 import 'create_prayer_button.dart';
+import 'package:background_fetch/background_fetch.dart';
+
+@pragma('vm:entry-point')
+void backgroundFetchHeadlessTask(HeadlessTask task) async {
+  String taskId = task.taskId;
+  bool isTimeout = task.timeout;
+  if (isTimeout) {
+    print("[BackgroundFetch] Headless task timed-out: $taskId");
+    BackgroundFetch.finish(taskId);
+    return;
+  }
+  print('[BackgroundFetch] Headless event received. $taskId');
+
+  Notif.scheduleNotification(
+    DateTime.now().toString(),
+    "taskifsd" + taskId,
+    DateTime.now().add(Duration(seconds: 5)),
+    id: 333,
+    sound: false,
+  );
+  BackgroundFetch.finish(taskId);
+}
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AwesomeNotifications().initialize(
+    null,
+    [
+      NotificationChannel(
+        channelKey: 'scheduled_channel',
+        channelName: 'Scheduled Notifications',
+        defaultColor: Colors.teal,
+        locked: true,
+        importance: NotificationImportance.Max,
+        channelShowBadge: true,
+        channelDescription: null,
+      ),
+    ],
+  );
+
+  await Preferences.init();
+  initializeTimeZones();
   runApp(const MaterialApp(home: Adhan()));
+
+  await BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 }
 
 class Adhan extends StatefulWidget {
@@ -22,9 +67,44 @@ class Adhan extends StatefulWidget {
 class _AdhanState extends State<Adhan> {
   final Color _color = Color.fromRGBO(230, 230, 250, 1);
   late Future<PrayerTiming> futureTimings;
+  late PrayerTimeAPI prayerTimeAPI;
   bool hasInternet = false;
   bool shouldClear = false;
   bool isLoading = true;
+
+  Future<void> initBackgourndService() async {
+    await BackgroundFetch.configure(
+      BackgroundFetchConfig(
+        minimumFetchInterval: 1,
+        stopOnTerminate: false,
+        enableHeadless: true,
+        requiresBatteryNotLow: false,
+        requiresCharging: false,
+        requiresStorageNotLow: false,
+        requiresDeviceIdle: false,
+        requiredNetworkType: NetworkType.NONE,
+        startOnBoot: true,
+        forceAlarmManager: true,
+      ),
+      (String taskId) async {
+        Notif.scheduleNotification(
+          DateTime.now().toString(),
+          "h" + taskId,
+          DateTime.now().add(Duration(seconds: 5)),
+          id: 333,
+          sound: false,
+        );
+        BackgroundFetch.finish(taskId);
+      },
+      (String taskId) async {
+        print('TIMEOUT');
+        BackgroundFetch.finish(taskId);
+      },
+    );
+
+    await BackgroundFetch.stop();
+    await BackgroundFetch.start().then((value) => print("working $value"));
+  }
 
   @override
   void initState() {
@@ -33,6 +113,7 @@ class _AdhanState extends State<Adhan> {
       hasInternet = event == InternetConnectionStatus.connected;
     });
     futureTimings = getLocationAndPrayerTimings(shouldClear);
+    initBackgourndService();
   }
 
   Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
@@ -63,7 +144,7 @@ class _AdhanState extends State<Adhan> {
     }
     var currentLocation = await location.getLocation();
 
-    final PrayerTimeAPI prayerTimeAPI = PrayerTimeAPI(
+    final PrayerTimeAPI prayerTimeAPI = PrayerTimeAPI.create(
       lat: currentLocation.latitude.toString(),
       long: currentLocation.longitude.toString(),
     );
