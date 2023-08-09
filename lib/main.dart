@@ -11,33 +11,26 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:timezone/data/latest.dart';
 import 'create_prayer_button.dart';
 import 'package:workmanager/workmanager.dart';
-// import 'package:background_fetch/background_fetch.dart';
 
-// BACKGROUND FETCH -
-// @pragma('vm:entry-point')
-// void backgroundFetchHeadlessTask(HeadlessTask task) async {
-//   String taskId = task.taskId;
-//   bool isTimeout = task.timeout;
-//   if (isTimeout) {
-//     print("[BackgroundFetch] Headless task timed-out: $taskId");
-//     BackgroundFetch.finish(taskId);
-//     return;
-//   }
-//   print('[BackgroundFetch] Headless event received. $taskId');
+const taskName = "getAndSavePrayers";
+const uniqueName = "getPrayer";
+var wm = Workmanager();
 
-//   Notif.scheduleNotification(
-//     DateTime.now().toString(),
-//     "taskifsd" + taskId,
-//     DateTime.now().add(Duration(seconds: 5)),
-//     id: 333,
-//     sound: false,
-//   );
-//   BackgroundFetch.finish(taskId);
-// }
-
+@pragma('vm:entry-point')
 void callbackDispatcher() {
-  Workmanager().executeTask((taskName, inputData) {
-    PrayerTimeAPI.instance!.getTimes();
+  wm.executeTask((task, inputData) async {
+    switch (task) {
+      case taskName:
+        await Notif.initializeNotification();
+        Notif.scheduleNotification(
+          "title",
+          "body",
+          DateTime.now().add(Duration(seconds: 5)),
+          id: DateTime.now().second,
+        );
+
+        break;
+    }
     return Future.value(true);
   });
 }
@@ -63,10 +56,7 @@ void main() async {
   initializeTimeZones();
   runApp(const MaterialApp(home: Adhan()));
 
-  // await BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
-  await Workmanager().initialize(callbackDispatcher);
-  await Workmanager()
-      .registerPeriodicTask('2', "3", frequency: Duration(seconds: 15));
+  await wm.initialize(callbackDispatcher, isInDebugMode: true);
 }
 
 class Adhan extends StatefulWidget {
@@ -84,41 +74,6 @@ class _AdhanState extends State<Adhan> {
   bool shouldClear = false;
   bool isLoading = true;
 
-  // BACKGROUND FETCH -
-  // Future<void> initBackgourndService() async {
-  //   await BackgroundFetch.configure(
-  //     BackgroundFetchConfig(
-  //       minimumFetchInterval: 1,
-  //       stopOnTerminate: false,
-  //       enableHeadless: true,
-  //       requiresBatteryNotLow: false,
-  //       requiresCharging: false,
-  //       requiresStorageNotLow: false,
-  //       requiresDeviceIdle: false,
-  //       requiredNetworkType: NetworkType.NONE,
-  //       startOnBoot: true,
-  //       forceAlarmManager: true,
-  //     ),
-  //     (String taskId) async {
-  //       Notif.scheduleNotification(
-  //         DateTime.now().toString(),
-  //         "h" + taskId,
-  //         DateTime.now().add(Duration(seconds: 5)),
-  //         id: 333,
-  //         sound: false,
-  //       );
-  //       BackgroundFetch.finish(taskId);
-  //     },
-  //     (String taskId) async {
-  //       print('TIMEOUT');
-  //       BackgroundFetch.finish(taskId);
-  //     },
-  //   );
-
-  //   await BackgroundFetch.stop();
-  //   await BackgroundFetch.start().then((value) => print("working $value"));
-  // }
-
   @override
   void initState() {
     super.initState();
@@ -126,7 +81,17 @@ class _AdhanState extends State<Adhan> {
       hasInternet = event == InternetConnectionStatus.connected;
     });
     futureTimings = getLocationAndPrayerTimings(shouldClear);
+    schedule();
     // initBackgourndService();
+  }
+
+  void schedule() async {
+    await wm.cancelAll();
+    await wm.registerPeriodicTask(
+      uniqueName,
+      taskName,
+      frequency: Duration(minutes: 15),
+    );
   }
 
   Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
@@ -218,13 +183,6 @@ class _AdhanState extends State<Adhan> {
         title: const Text(
           "ADHAN",
           style: TextStyle(color: Colors.black),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.menu,
-            color: Colors.black,
-          ),
-          onPressed: () {},
         ),
       ),
       body: RefreshIndicator(
