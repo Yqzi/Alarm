@@ -10,27 +10,36 @@ import 'package:adhan/repositories/prayer_time_api.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:timezone/data/latest.dart';
 import 'create_prayer_button.dart';
-import 'package:background_fetch/background_fetch.dart';
+import 'package:workmanager/workmanager.dart';
+// import 'package:background_fetch/background_fetch.dart';
 
-@pragma('vm:entry-point')
-void backgroundFetchHeadlessTask(HeadlessTask task) async {
-  String taskId = task.taskId;
-  bool isTimeout = task.timeout;
-  if (isTimeout) {
-    print("[BackgroundFetch] Headless task timed-out: $taskId");
-    BackgroundFetch.finish(taskId);
-    return;
-  }
-  print('[BackgroundFetch] Headless event received. $taskId');
+// BACKGROUND FETCH -
+// @pragma('vm:entry-point')
+// void backgroundFetchHeadlessTask(HeadlessTask task) async {
+//   String taskId = task.taskId;
+//   bool isTimeout = task.timeout;
+//   if (isTimeout) {
+//     print("[BackgroundFetch] Headless task timed-out: $taskId");
+//     BackgroundFetch.finish(taskId);
+//     return;
+//   }
+//   print('[BackgroundFetch] Headless event received. $taskId');
 
-  Notif.scheduleNotification(
-    DateTime.now().toString(),
-    "taskifsd" + taskId,
-    DateTime.now().add(Duration(seconds: 5)),
-    id: 333,
-    sound: false,
-  );
-  BackgroundFetch.finish(taskId);
+//   Notif.scheduleNotification(
+//     DateTime.now().toString(),
+//     "taskifsd" + taskId,
+//     DateTime.now().add(Duration(seconds: 5)),
+//     id: 333,
+//     sound: false,
+//   );
+//   BackgroundFetch.finish(taskId);
+// }
+
+void callbackDispatcher() {
+  Workmanager().executeTask((taskName, inputData) {
+    PrayerTimeAPI.instance!.getTimes();
+    return Future.value(true);
+  });
 }
 
 void main() async {
@@ -54,7 +63,10 @@ void main() async {
   initializeTimeZones();
   runApp(const MaterialApp(home: Adhan()));
 
-  await BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+  // await BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+  await Workmanager().initialize(callbackDispatcher);
+  await Workmanager()
+      .registerPeriodicTask('2', "3", frequency: Duration(seconds: 15));
 }
 
 class Adhan extends StatefulWidget {
@@ -72,39 +84,40 @@ class _AdhanState extends State<Adhan> {
   bool shouldClear = false;
   bool isLoading = true;
 
-  Future<void> initBackgourndService() async {
-    await BackgroundFetch.configure(
-      BackgroundFetchConfig(
-        minimumFetchInterval: 1,
-        stopOnTerminate: false,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.NONE,
-        startOnBoot: true,
-        forceAlarmManager: true,
-      ),
-      (String taskId) async {
-        Notif.scheduleNotification(
-          DateTime.now().toString(),
-          "h" + taskId,
-          DateTime.now().add(Duration(seconds: 5)),
-          id: 333,
-          sound: false,
-        );
-        BackgroundFetch.finish(taskId);
-      },
-      (String taskId) async {
-        print('TIMEOUT');
-        BackgroundFetch.finish(taskId);
-      },
-    );
+  // BACKGROUND FETCH -
+  // Future<void> initBackgourndService() async {
+  //   await BackgroundFetch.configure(
+  //     BackgroundFetchConfig(
+  //       minimumFetchInterval: 1,
+  //       stopOnTerminate: false,
+  //       enableHeadless: true,
+  //       requiresBatteryNotLow: false,
+  //       requiresCharging: false,
+  //       requiresStorageNotLow: false,
+  //       requiresDeviceIdle: false,
+  //       requiredNetworkType: NetworkType.NONE,
+  //       startOnBoot: true,
+  //       forceAlarmManager: true,
+  //     ),
+  //     (String taskId) async {
+  //       Notif.scheduleNotification(
+  //         DateTime.now().toString(),
+  //         "h" + taskId,
+  //         DateTime.now().add(Duration(seconds: 5)),
+  //         id: 333,
+  //         sound: false,
+  //       );
+  //       BackgroundFetch.finish(taskId);
+  //     },
+  //     (String taskId) async {
+  //       print('TIMEOUT');
+  //       BackgroundFetch.finish(taskId);
+  //     },
+  //   );
 
-    await BackgroundFetch.stop();
-    await BackgroundFetch.start().then((value) => print("working $value"));
-  }
+  //   await BackgroundFetch.stop();
+  //   await BackgroundFetch.start().then((value) => print("working $value"));
+  // }
 
   @override
   void initState() {
@@ -113,7 +126,7 @@ class _AdhanState extends State<Adhan> {
       hasInternet = event == InternetConnectionStatus.connected;
     });
     futureTimings = getLocationAndPrayerTimings(shouldClear);
-    initBackgourndService();
+    // initBackgourndService();
   }
 
   Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
