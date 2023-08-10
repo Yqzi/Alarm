@@ -2,9 +2,8 @@ import 'dart:async';
 
 import 'package:adhan/models/prayer_timing.dart';
 import 'package:flutter/material.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:location/location.dart';
-import 'package:adhan/repositories/prayer_time_api.dart';
+import 'package:adhan/repositories/prayer_time_calculator.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'create_prayer_button.dart';
 
@@ -18,30 +17,16 @@ class AdhanHome extends StatefulWidget {
 class _AdhanHomeState extends State<AdhanHome> {
   final Color _color = Color.fromRGBO(230, 230, 250, 1);
   late Future<PrayerTiming> futureTimings;
-  late PrayerTimeAPI prayerTimeAPI;
-  bool hasInternet = false;
-  bool shouldClear = false;
+  late PrayerTimeCalculator prayerTimeCalculator;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    InternetConnectionChecker().onStatusChange.listen((event) {
-      hasInternet = event == InternetConnectionStatus.connected;
-    });
-    futureTimings = getLocationAndPrayerTimings(shouldClear);
+    futureTimings = getLocationAndPrayerTimings();
   }
 
-  Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
-    bool online = false;
-
-    online = hasInternet;
-    print(online);
-
-    if (clear && online) PrayerTimeAPI.clearCache();
-    print(online);
-    shouldClear = false;
-
+  Future<PrayerTiming> getLocationAndPrayerTimings() async {
     var location = Location();
     var serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) {
@@ -60,9 +45,10 @@ class _AdhanHomeState extends State<AdhanHome> {
     }
     var currentLocation = await location.getLocation();
 
-    final PrayerTimeAPI prayerTimeAPI = PrayerTimeAPI.create(
-      lat: currentLocation.latitude.toString(),
-      long: currentLocation.longitude.toString(),
+    final PrayerTimeCalculator prayerTimeCalculator =
+        PrayerTimeCalculator.create(
+      lat: currentLocation.latitude!,
+      long: currentLocation.longitude!,
     );
 
     // other
@@ -74,7 +60,7 @@ class _AdhanHomeState extends State<AdhanHome> {
     // done toerh
 
     setState(() => isLoading = false);
-    return await prayerTimeAPI.getTimes();
+    return await prayerTimeCalculator.getTimes();
   }
 
   Future<dynamic> showCustomDialog() {
@@ -133,9 +119,8 @@ class _AdhanHomeState extends State<AdhanHome> {
       body: RefreshIndicator(
         displacement: 20,
         onRefresh: () async {
-          shouldClear = true;
           isLoading = true;
-          futureTimings = getLocationAndPrayerTimings(shouldClear);
+          futureTimings = getLocationAndPrayerTimings();
           setState(() => null);
         },
         child: ListView(

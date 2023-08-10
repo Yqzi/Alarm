@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:adhan/home.dart';
 import 'package:adhan/repositories/notification.dart';
-import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:timezone/data/latest.dart';
@@ -25,7 +24,6 @@ void main() async {
     ],
   );
 
-  await Preferences.init();
   initializeTimeZones();
   await initBackgourndService();
 

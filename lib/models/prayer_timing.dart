@@ -1,6 +1,5 @@
 import 'package:adhan/create_prayer_button.dart';
 import 'package:adhan/repositories/notification.dart';
-import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 
 class PrayerTiming {
@@ -32,8 +31,8 @@ class PrayerTiming {
 
   static final Notif notif = Notif();
 
-  factory PrayerTiming.fromJson(Map<String, dynamic> j) {
-    Map<String, Object?> m = j["timings"];
+  factory PrayerTiming.fromCalculator(Map<String, dynamic> j) {
+    Map<String, Object?> m = j;
     return PrayerTiming(
       fajr: Prayer.name(fajrName, m, 0),
       dhuhr: Prayer.name(dhuhrName, m, 1),
@@ -46,9 +45,8 @@ class PrayerTiming {
   }
 }
 
-TimeOfDay _todayWithTime(String time) {
-  List<String> times = time.split("(")[0].split(":");
-  return TimeOfDay(hour: int.parse(times[0]), minute: int.parse(times[1]));
+TimeOfDay _todayWithTime(DateTime time) {
+  return TimeOfDay.fromDateTime(time);
 }
 
 class Prayer {
@@ -68,15 +66,14 @@ class Prayer {
     Map<String, dynamic> m,
     this.id, {
     NotificationStatus s = NotificationStatus.notification,
-  }) : time = _todayWithTime(m[name] as String) {
-    String x = Preferences.load(name) ?? s.name;
+  }) : time = _todayWithTime(m[name] as DateTime) {
+    String x = s.name;
 
     setStatus = NotificationStatus.values.firstWhere((e) => e.name == x);
   }
 
   void set setStatus(NotificationStatus s) {
     _status = s;
-    Preferences.save(name, _status.name);
     _setNotification();
   }
 
