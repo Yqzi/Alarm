@@ -1,6 +1,8 @@
 import 'package:adhan/models/prayer_timing.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:timezone/timezone.dart';
 
 class PrayerButton extends StatefulWidget {
   final Prayer prayer;
@@ -23,11 +25,32 @@ class PrayerButton extends StatefulWidget {
 class _PrayerButtonState extends State<PrayerButton> {
   NotificationStatus state = NotificationStatus.mute;
   IconData icon = FontAwesomeIcons.volumeXmark;
+  Notif notif = Notif();
+
+  DateTime get notifTime {
+    final now = DateTime.now();
+    return DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+      now.second + 10,
+      // widget.prayer.time.hour,
+      // widget.prayer.time.minute,
+    );
+  }
 
   @override
   void initState() {
+    print(widget.prayer.time);
     state = widget.prayer.status;
-    setIcon();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      await notif.initializeNotification();
+      setState(() {
+        setIcon();
+      });
+    });
 
     super.initState();
   }
@@ -35,22 +58,42 @@ class _PrayerButtonState extends State<PrayerButton> {
   void getState(value) {
     setState(() {
       state = value;
-      widget.prayer.setStatus = state;
       setIcon();
     });
+  }
+
+  void create_mute() async {
+    (await Notif._flutterLocalNotificationsPlugin).cancel(widget.prayer.id);
+  }
+
+  void omnipotentNotif(bool sound) async {
+    notif.scheduleNotification(
+      widget.prayer.name,
+      widget.prayer.name == "Sunrise"
+          ? "Who's gonna carry the boats?"
+          : widget.prayer.name == "Sunset"
+              ? "The sun has fallen"
+              : "It is time for Salat",
+      notifTime,
+      id: widget.prayer.id,
+      sound: sound,
+    );
   }
 
   void setIcon() {
     if (state == NotificationStatus.mute) {
       icon = FontAwesomeIcons.volumeXmark;
+      create_mute();
       return;
     }
     if (state == NotificationStatus.notification) {
       icon = Icons.notifications;
+      omnipotentNotif(false);
       return;
     }
     if (state == NotificationStatus.alarm) {
       icon = Icons.volume_up;
+      omnipotentNotif(true);
       return;
     }
   }
@@ -70,7 +113,7 @@ class _PrayerButtonState extends State<PrayerButton> {
               builder: (context) => _Dialog(
                 name: widget.prayer.name,
                 formmatedTime: widget.prayer.time.format(context),
-                changeState: getState,
+                state: getState,
                 status: state,
               ),
             );
@@ -118,13 +161,13 @@ class _Dialog extends StatefulWidget {
   const _Dialog({
     required this.name,
     required this.formmatedTime,
-    required this.changeState,
+    required this.state,
     required this.status,
   });
 
   final String name;
   final String formmatedTime;
-  final void Function(dynamic) changeState;
+  final void Function(dynamic) state;
   final NotificationStatus status;
 
   @override
@@ -137,7 +180,7 @@ class _DialogState extends State<_Dialog> {
   void boxSelected(NotificationStatus box) {
     setState(() {
       status = box;
-      widget.changeState(status);
+      widget.state(status);
     });
   }
 
@@ -229,5 +272,47 @@ class _CheckBox extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class Notif {
+  static final FlutterLocalNotificationsPlugin
+      _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  final AndroidInitializationSettings _androidInitializationSettings =
+      AndroidInitializationSettings('mipmap/ic_launcher');
+
+  Future<void> initializeNotification() async {
+    InitializationSettings initializationSettings =
+        InitializationSettings(android: _androidInitializationSettings);
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> scheduleNotification(
+    String title,
+    String body,
+    DateTime time, {
+    required int id,
+    bool sound = true,
+  }) async {
+    AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+      'dddddddd',
+      'channelName',
+      importance: Importance.max,
+      priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound('a'),
+      autoCancel: false,
+      playSound: sound,
+    );
+
+    NotificationDetails notificationDetails = NotificationDetails(
+      android: androidNotificationDetails,
+    );
+
+    await _flutterLocalNotificationsPlugin.zonedSchedule(id, title, body,
+        TZDateTime.from(time, local), await notificationDetails,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime);
   }
 }

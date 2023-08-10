@@ -9,14 +9,7 @@ class PrayerTimeAPI {
   final String lat;
   final String long;
 
-  static PrayerTimeAPI? instance;
-
-  PrayerTimeAPI._new(this.lat, this.long);
-
-  factory PrayerTimeAPI.create({required String lat, required String long}) {
-    instance = instance ?? PrayerTimeAPI._new(lat, long);
-    return instance!;
-  }
+  PrayerTimeAPI({required this.lat, required this.long});
 
   DateTime get _now => DateTime.now();
 

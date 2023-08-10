@@ -1,6 +1,4 @@
 import 'package:adhan/create_prayer_button.dart';
-import 'package:adhan/repositories/notification.dart';
-import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 
 class PrayerTiming {
@@ -38,8 +36,8 @@ class PrayerTiming {
       asr: Prayer.name(asrName, m, 2),
       maghrib: Prayer.name(maghribName, m, 3),
       isha: Prayer.name(ishaName, m, 4),
-      sunrise: Prayer.name(riseName, m, 5, s: NotificationStatus.mute),
-      sunset: Prayer.name(setName, m, 6, s: NotificationStatus.mute),
+      sunrise: Prayer.name(riseName, m, 5, NotificationStatus.mute),
+      sunset: Prayer.name(setName, m, 6, NotificationStatus.mute),
     );
   }
 }
@@ -53,10 +51,11 @@ class Prayer {
   final String name;
   final TimeOfDay time;
   final int id;
-  NotificationStatus _status = NotificationStatus.notification;
+  NotificationStatus status;
 
   Prayer({
     required this.name,
+    this.status = NotificationStatus.notification,
     required this.time,
     required this.id,
   });
@@ -64,52 +63,7 @@ class Prayer {
   Prayer.name(
     this.name,
     Map<String, dynamic> m,
-    this.id, {
-    NotificationStatus s = NotificationStatus.notification,
-  }) : time = _todayWithTime(m[name] as String) {
-    String x = Preferences.load(name) ?? s.name;
-
-    setStatus = NotificationStatus.values.firstWhere((e) => e.name == x);
-  }
-
-  void set setStatus(NotificationStatus s) {
-    _status = s;
-    Preferences.save(name, _status.name);
-    _setNotification();
-  }
-
-  NotificationStatus get status => _status;
-
-  void _setNotification() async {
-    if (_status == NotificationStatus.mute) {
-      Notif.cancelNotification(id);
-      return;
-    }
-    bool sound = _status == NotificationStatus.alarm;
-    Notif.scheduleNotification(
-      name,
-      name == "Sunrise"
-          ? "Who's gonna carry the boats?"
-          : name == "Sunset"
-              ? "The sun has fallen"
-              : "It is time for Salat",
-      _notifTime,
-      id: id,
-      sound: sound,
-    );
-  }
-
-  DateTime get _notifTime {
-    final now = DateTime.now();
-    return DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour,
-      now.minute,
-      now.second + 10,
-      // widget.prayer.time.hour,
-      // widget.prayer.time.minute,
-    );
-  }
+    this.id, [
+    this.status = NotificationStatus.notification,
+  ]) : time = _todayWithTime(m[name] as String);
 }

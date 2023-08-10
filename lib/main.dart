@@ -1,62 +1,15 @@
 import 'dart:async';
 
 import 'package:adhan/models/prayer_timing.dart';
-import 'package:adhan/repositories/notification.dart';
-import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:location/location.dart';
 import 'package:adhan/repositories/prayer_time_api.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:timezone/data/latest.dart';
 import 'create_prayer_button.dart';
-import 'package:workmanager/workmanager.dart';
-
-const taskName = "getAndSavePrayers";
-const uniqueName = "getPrayer";
-var wm = Workmanager();
-
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  wm.executeTask((task, inputData) async {
-    switch (task) {
-      case taskName:
-        await Notif.initializeNotification();
-        Notif.scheduleNotification(
-          "title",
-          "body",
-          DateTime.now().add(Duration(seconds: 5)),
-          id: DateTime.now().second,
-        );
-
-        break;
-    }
-    return Future.value(true);
-  });
-}
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await AwesomeNotifications().initialize(
-    null,
-    [
-      NotificationChannel(
-        channelKey: 'scheduled_channel',
-        channelName: 'Scheduled Notifications',
-        defaultColor: Colors.teal,
-        locked: true,
-        importance: NotificationImportance.Max,
-        channelShowBadge: true,
-        channelDescription: null,
-      ),
-    ],
-  );
-
-  await Preferences.init();
-  initializeTimeZones();
   runApp(const MaterialApp(home: Adhan()));
-
-  await wm.initialize(callbackDispatcher, isInDebugMode: true);
 }
 
 class Adhan extends StatefulWidget {
@@ -69,7 +22,6 @@ class Adhan extends StatefulWidget {
 class _AdhanState extends State<Adhan> {
   final Color _color = Color.fromRGBO(230, 230, 250, 1);
   late Future<PrayerTiming> futureTimings;
-  late PrayerTimeAPI prayerTimeAPI;
   bool hasInternet = false;
   bool shouldClear = false;
   bool isLoading = true;
@@ -81,17 +33,6 @@ class _AdhanState extends State<Adhan> {
       hasInternet = event == InternetConnectionStatus.connected;
     });
     futureTimings = getLocationAndPrayerTimings(shouldClear);
-    schedule();
-    // initBackgourndService();
-  }
-
-  void schedule() async {
-    await wm.cancelAll();
-    await wm.registerPeriodicTask(
-      uniqueName,
-      taskName,
-      frequency: Duration(minutes: 15),
-    );
   }
 
   Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
@@ -122,7 +63,7 @@ class _AdhanState extends State<Adhan> {
     }
     var currentLocation = await location.getLocation();
 
-    final PrayerTimeAPI prayerTimeAPI = PrayerTimeAPI.create(
+    final PrayerTimeAPI prayerTimeAPI = PrayerTimeAPI(
       lat: currentLocation.latitude.toString(),
       long: currentLocation.longitude.toString(),
     );
