@@ -1,23 +1,25 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart';
 import 'package:timezone/timezone.dart';
 
 class Notif {
-  static final _flnp _notifPlugin = _flnp();
+  final _flnp _notifPlugin = _flnp();
 
-  static Future<bool> initializeNotification() async {
+  Future<bool> initializeNotification() async {
+    initializeTimeZones();
     final _ais _androidS = _ais('mipmap/ic_launcher');
     InitializationSettings initSet = InitializationSettings(android: _androidS);
     await _notifPlugin.initialize(initSet);
     return true;
   }
 
-  static bool? _isInitialized;
+  bool? _isInitialized;
 
-  static Future<void> cancelNotification(int id) async {
+  Future<void> cancelNotification(int id) async {
     _notifPlugin.cancel(id);
   }
 
-  static Future<void> scheduleNotification(
+  Future<void> scheduleNotification(
     String title,
     String body,
     DateTime time, {

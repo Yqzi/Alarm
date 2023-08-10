@@ -30,6 +30,8 @@ class PrayerTiming {
   static String get riseName => "Sunrise";
   static String get setName => "Sunset";
 
+  static final Notif notif = Notif();
+
   factory PrayerTiming.fromJson(Map<String, dynamic> j) {
     Map<String, Object?> m = j["timings"];
     return PrayerTiming(
@@ -82,11 +84,11 @@ class Prayer {
 
   void _setNotification() async {
     if (_status == NotificationStatus.mute) {
-      Notif.cancelNotification(id);
+      PrayerTiming.notif.cancelNotification(id);
       return;
     }
     bool sound = _status == NotificationStatus.alarm;
-    Notif.scheduleNotification(
+    PrayerTiming.notif.scheduleNotification(
       name,
       name == "Sunrise"
           ? "Who's gonna carry the boats?"
