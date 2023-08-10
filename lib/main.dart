@@ -16,6 +16,7 @@ import 'package:background_fetch/background_fetch.dart';
 void backgroundFetchHeadlessTask(HeadlessTask task) async {
   String taskId = task.taskId;
   bool isTimeout = task.timeout;
+
   if (isTimeout) {
     print("[BackgroundFetch] Headless task timed-out: $taskId");
     BackgroundFetch.finish(taskId);
@@ -23,13 +24,27 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
   }
   print('[BackgroundFetch] Headless event received. $taskId');
 
-  Notif.scheduleNotification(
-    DateTime.now().toString(),
-    "taskifsd" + taskId,
-    DateTime.now().add(Duration(seconds: 5)),
-    id: 333,
-    sound: false,
-  );
+  if (taskId == "flutter_background_fetch") {
+    BackgroundFetch.configure(
+      BackgroundFetchConfig(
+          minimumFetchInterval: 15,
+          enableHeadless: true,
+          stopOnTerminate: false,
+          startOnBoot: true),
+      () async {
+        initializeTimeZones();
+        Notif.initializeNotification();
+        Notif.scheduleNotification(
+          DateTime.now().toString(),
+          "NOT RUNNING TASK : " + taskId,
+          DateTime.now().add(Duration(seconds: 10)),
+          id: DateTime.now().second,
+          sound: false,
+        );
+      },
+    );
+  }
+
   BackgroundFetch.finish(taskId);
 }
 
@@ -52,9 +67,10 @@ void main() async {
 
   await Preferences.init();
   initializeTimeZones();
-  runApp(const MaterialApp(home: Adhan()));
+  await initBackgourndService();
 
-  await BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+  runApp(const MaterialApp(home: Adhan()));
+  BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 }
 
 class Adhan extends StatefulWidget {
@@ -62,6 +78,40 @@ class Adhan extends StatefulWidget {
 
   @override
   State<Adhan> createState() => _AdhanState();
+}
+
+Future<void> initBackgourndService() async {
+  await BackgroundFetch.configure(
+    BackgroundFetchConfig(
+      minimumFetchInterval: 15,
+      stopOnTerminate: false,
+      enableHeadless: true,
+      // requiresBatteryNotLow: false,
+      // requiresCharging: false,
+      // requiresStorageNotLow: false,
+      // requiresDeviceIdle: false,
+      // requiredNetworkType: NetworkType.NONE,
+      startOnBoot: true,
+      // forceAlarmManager: true,
+    ),
+    (String taskId) async {
+      Notif.scheduleNotification(
+        "(NOT HEADLESS) : " + taskId,
+        DateTime.now().toString(),
+        DateTime.now().add(Duration(seconds: 5)),
+        id: 333,
+        sound: false,
+      );
+      BackgroundFetch.finish(taskId);
+    },
+    (String taskId) async {
+      print('TIMEOUT');
+      BackgroundFetch.finish(taskId);
+    },
+  );
+
+  // await BackgroundFetch.stop();
+  // await BackgroundFetch.start().then((value) => print("working $value"));
 }
 
 class _AdhanState extends State<Adhan> {
@@ -72,40 +122,6 @@ class _AdhanState extends State<Adhan> {
   bool shouldClear = false;
   bool isLoading = true;
 
-  Future<void> initBackgourndService() async {
-    await BackgroundFetch.configure(
-      BackgroundFetchConfig(
-        minimumFetchInterval: 1,
-        stopOnTerminate: false,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.NONE,
-        startOnBoot: true,
-        forceAlarmManager: true,
-      ),
-      (String taskId) async {
-        Notif.scheduleNotification(
-          DateTime.now().toString(),
-          "h" + taskId,
-          DateTime.now().add(Duration(seconds: 5)),
-          id: 333,
-          sound: false,
-        );
-        BackgroundFetch.finish(taskId);
-      },
-      (String taskId) async {
-        print('TIMEOUT');
-        BackgroundFetch.finish(taskId);
-      },
-    );
-
-    await BackgroundFetch.stop();
-    await BackgroundFetch.start().then((value) => print("working $value"));
-  }
-
   @override
   void initState() {
     super.initState();
@@ -113,7 +129,7 @@ class _AdhanState extends State<Adhan> {
       hasInternet = event == InternetConnectionStatus.connected;
     });
     futureTimings = getLocationAndPrayerTimings(shouldClear);
-    initBackgourndService();
+    Notif.initializeNotification();
   }
 
   Future<PrayerTiming> getLocationAndPrayerTimings([bool clear = false]) async {
