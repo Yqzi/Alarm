@@ -1,4 +1,6 @@
 import 'package:adhan/create_prayer_button.dart';
+import 'package:adhan/repositories/notification.dart';
+import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 
 class PrayerTiming {
@@ -38,8 +40,8 @@ class PrayerTiming {
       asr: Prayer.name(asrName, m, 2),
       maghrib: Prayer.name(maghribName, m, 3),
       isha: Prayer.name(ishaName, m, 4),
-      sunrise: Prayer.name(riseName, m, 5, NotificationStatus.mute),
-      sunset: Prayer.name(setName, m, 6, NotificationStatus.mute),
+      sunrise: Prayer.name(riseName, m, 5, s: NotificationStatus.mute),
+      sunset: Prayer.name(setName, m, 6, s: NotificationStatus.mute),
     );
   }
 }
@@ -53,11 +55,10 @@ class Prayer {
   final String name;
   final TimeOfDay time;
   final int id;
-  NotificationStatus status;
+  NotificationStatus _status = NotificationStatus.notification;
 
   Prayer({
     required this.name,
-    this.status = NotificationStatus.notification,
     required this.time,
     required this.id,
   });
