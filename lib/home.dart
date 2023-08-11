@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:adhan/models/prayer_timing.dart';
+import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:adhan/repositories/prayer_time_calculator.dart';
@@ -17,7 +18,7 @@ class AdhanHome extends StatefulWidget {
 class _AdhanHomeState extends State<AdhanHome> {
   final Color _color = Color.fromRGBO(230, 230, 250, 1);
   late Future<PrayerTiming> futureTimings;
-  late PrayerTimeCalculator prayerTimeCalculator;
+  PrayerTimeCalculator? prayerTimeCalculator;
   bool isLoading = true;
 
   @override
@@ -45,11 +46,11 @@ class _AdhanHomeState extends State<AdhanHome> {
     }
     var currentLocation = await location.getLocation();
 
-    final PrayerTimeCalculator prayerTimeCalculator =
-        PrayerTimeCalculator.create(
-      lat: currentLocation.latitude!,
-      long: currentLocation.longitude!,
-    );
+    prayerTimeCalculator = prayerTimeCalculator ??
+        PrayerTimeCalculator(
+          currentLocation.latitude!,
+          currentLocation.longitude!,
+        );
 
     // other
     bool isNotificationAllowed =
@@ -59,8 +60,9 @@ class _AdhanHomeState extends State<AdhanHome> {
     }
     // done toerh
 
+    initBackgourndService(prayerTimeCalculator!);
     setState(() => isLoading = false);
-    return await prayerTimeCalculator.getTimes();
+    return await prayerTimeCalculator!.getTimes();
   }
 
   Future<dynamic> showCustomDialog() {
@@ -199,4 +201,33 @@ class _AdhanHomeState extends State<AdhanHome> {
       ),
     );
   }
+}
+
+Future<void> initBackgourndService(PrayerTimeCalculator ptc) async {
+  await BackgroundFetch.configure(
+    BackgroundFetchConfig(
+      minimumFetchInterval: 15,
+      stopOnTerminate: false,
+      enableHeadless: true,
+      requiresBatteryNotLow: false,
+      requiresCharging: false,
+      requiresStorageNotLow: false,
+      requiresDeviceIdle: false,
+      requiredNetworkType: NetworkType.NONE,
+      startOnBoot: true,
+    ),
+    (String taskId) async {
+      print("NOT HEADLESS - BGF");
+      ptc.getTimes();
+
+      BackgroundFetch.finish(taskId);
+    },
+    (String taskId) async {
+      print('TIMEOUT');
+      BackgroundFetch.finish(taskId);
+    },
+  );
+
+  await BackgroundFetch.stop();
+  await BackgroundFetch.start().then((value) => print("working $value"));
 }

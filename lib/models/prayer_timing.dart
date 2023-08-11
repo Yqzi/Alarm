@@ -1,5 +1,6 @@
 import 'package:adhan/create_prayer_button.dart';
 import 'package:adhan/repositories/notification.dart';
+import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 
 class PrayerTiming {
@@ -67,13 +68,14 @@ class Prayer {
     this.id, {
     NotificationStatus s = NotificationStatus.notification,
   }) : time = _todayWithTime(m[name] as DateTime) {
-    String x = s.name;
+    String x = Preferences.load(name) ?? s.name;
 
     setStatus = NotificationStatus.values.firstWhere((e) => e.name == x);
   }
 
   void set setStatus(NotificationStatus s) {
     _status = s;
+    Preferences.save(name, _status.name);
     _setNotification();
   }
 
