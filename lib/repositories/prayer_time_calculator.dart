@@ -1,14 +1,30 @@
 import 'package:adhan/models/prayer_timing.dart';
+import 'package:adhan/repositories/notification.dart';
+import 'package:adhan/utilities.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 
 class PrayerTimeCalculator {
-  final double lat;
-  final double long;
+  late final double lat;
+  late final double long;
+
+  final Preferences prefs = Preferences();
+  final Notif notif = Notif();
 
   PrayerTimeCalculator(this.lat, this.long);
 
+  PrayerTimeCalculator.fromCache();
+
   Future<PrayerTiming> getTimes() async {
-    Coordinates coordinates = Coordinates(lat, long);
+    await prefs.init();
+    Coordinates coordinates;
+
+    try {
+      coordinates = Coordinates(lat, long);
+    } catch (e) {
+      coordinates = prefs.loadCoord()!;
+      lat = coordinates.latitude;
+      long = coordinates.longitude;
+    }
 
     // Parameters
     CalculationParameters params = CalculationMethod.NorthAmerica();
@@ -38,6 +54,7 @@ class PrayerTimeCalculator {
       PrayerTiming.ishaName: ishaTime,
     };
 
-    return PrayerTiming.fromCalculator(timesList);
+    prefs.saveCoord(coordinates);
+    return PrayerTiming.fromCalculator(timesList, prefs, notif);
   }
 }

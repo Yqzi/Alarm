@@ -1,11 +1,10 @@
 import 'package:adhan/home.dart';
 import 'package:adhan/repositories/prayer_time_calculator.dart';
-import 'package:adhan/utilities.dart';
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:location/location.dart';
 import 'package:timezone/data/latest.dart';
 import 'package:background_fetch/background_fetch.dart';
+import 'package:shared_preferences_android/shared_preferences_android.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +23,6 @@ void main() async {
     ],
   );
 
-  await Preferences.init();
   initializeTimeZones();
 
   runApp(const MaterialApp(home: AdhanHome()));
@@ -33,15 +31,14 @@ void main() async {
 
 @pragma('vm:entry-point')
 void backgroundFetchHeadlessTask(HeadlessTask task) async {
-  final _fip = Preferences.init();
-  final _fl = Location().getLocation();
+  SharedPreferencesAndroid.registerWith();
   String taskId = task.taskId;
   bool isTimeout = task.timeout;
 
-  // if (DateTime.now().hour > 6) {
-  //   BackgroundFetch.finish(taskId);
-  //   return;
-  // }
+  if (DateTime.now().hour > 6) {
+    BackgroundFetch.finish(taskId);
+    return;
+  }
 
   if (isTimeout) {
     print("[BackgroundFetch] Headless task timed-out: $taskId");
@@ -51,12 +48,10 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
   print('[BackgroundFetch] Headless event received. $taskId');
 
   if (taskId == "flutter_background_fetch") {
-    await _fip;
-    final LocationData _l = await _fl;
-    final PrayerTimeCalculator prayerTimeCalculator = PrayerTimeCalculator(
-      _l.latitude!,
-      _l.longitude!,
-    );
+    print("Before Location await");
+    print("After Location await");
+    final PrayerTimeCalculator prayerTimeCalculator =
+        PrayerTimeCalculator.fromCache();
     prayerTimeCalculator.getTimes();
   }
 

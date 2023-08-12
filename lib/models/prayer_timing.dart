@@ -30,18 +30,17 @@ class PrayerTiming {
   static String get riseName => "Sunrise";
   static String get setName => "Sunset";
 
-  static final Notif notif = Notif();
-
-  factory PrayerTiming.fromCalculator(Map<String, dynamic> j) {
+  factory PrayerTiming.fromCalculator(
+      Map<String, dynamic> j, Preferences prefs, Notif n) {
     Map<String, Object?> m = j;
     return PrayerTiming(
-      fajr: Prayer.name(fajrName, m, 0),
-      dhuhr: Prayer.name(dhuhrName, m, 1),
-      asr: Prayer.name(asrName, m, 2),
-      maghrib: Prayer.name(maghribName, m, 3),
-      isha: Prayer.name(ishaName, m, 4),
-      sunrise: Prayer.name(riseName, m, 5, s: NotificationStatus.mute),
-      sunset: Prayer.name(setName, m, 6, s: NotificationStatus.mute),
+      fajr: Prayer.name(fajrName, m, 0, prefs: prefs, notif: n),
+      dhuhr: Prayer.name(dhuhrName, m, 1, prefs: prefs, notif: n),
+      asr: Prayer.name(asrName, m, 2, prefs: prefs, notif: n),
+      maghrib: Prayer.name(maghribName, m, 3, prefs: prefs, notif: n),
+      isha: Prayer.name(ishaName, m, 4, prefs: prefs, notif: n),
+      sunrise: Prayer.name(riseName, m, 5, s: _ns.mute, prefs: prefs, notif: n),
+      sunset: Prayer.name(setName, m, 6, s: _ns.mute, prefs: prefs, notif: n),
     );
   }
 }
@@ -54,28 +53,34 @@ class Prayer {
   final String name;
   final TimeOfDay time;
   final int id;
+  final Preferences prefs;
   NotificationStatus _status = NotificationStatus.notification;
+  final Notif notif;
 
   Prayer({
     required this.name,
     required this.time,
     required this.id,
+    required this.prefs,
+    required this.notif,
   });
 
   Prayer.name(
     this.name,
     Map<String, dynamic> m,
     this.id, {
+    required this.prefs,
+    required this.notif,
     NotificationStatus s = NotificationStatus.notification,
   }) : time = _todayWithTime(m[name] as DateTime) {
-    String x = Preferences.load(name) ?? s.name;
+    String x = prefs.load(name) ?? s.name;
 
     setStatus = NotificationStatus.values.firstWhere((e) => e.name == x);
   }
 
   void set setStatus(NotificationStatus s) {
     _status = s;
-    Preferences.save(name, _status.name);
+    prefs.save(name, _status.name);
     _setNotification();
   }
 
@@ -83,11 +88,11 @@ class Prayer {
 
   void _setNotification() async {
     if (_status == NotificationStatus.mute) {
-      PrayerTiming.notif.cancelNotification(id);
+      notif.cancelNotification(id);
       return;
     }
     bool sound = _status == NotificationStatus.alarm;
-    PrayerTiming.notif.scheduleNotification(
+    notif.scheduleNotification(
       name,
       name == "Sunrise"
           ? "Who's gonna carry the boats?"
@@ -106,11 +111,13 @@ class Prayer {
       now.year,
       now.month,
       now.day,
-      now.hour,
-      now.minute,
-      now.second + 10,
-      // widget.prayer.time.hour,
-      // widget.prayer.time.minute,
+      // now.hour,
+      // now.minute,
+      // now.second + 10,
+      time.hour,
+      time.minute,
     );
   }
 }
+
+typedef _ns = NotificationStatus;
