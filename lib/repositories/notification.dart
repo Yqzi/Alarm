@@ -5,6 +5,7 @@ import 'package:timezone/timezone.dart';
 class Notif {
   final _flnp _notifPlugin = _flnp();
 
+  // initializes the capabilities for notifications.
   Future<bool> initializeNotification() async {
     initializeTimeZones();
     final _ais _androidS = _ais('mipmap/ic_launcher');
@@ -26,6 +27,7 @@ class Notif {
     required int id,
     bool sound = false,
   }) async {
+    // initialize notification if not already initialized
     _isInitialized = _isInitialized ?? await initializeNotification();
     _and ands = _and(
       'channelID: ' + sound.toString(),
