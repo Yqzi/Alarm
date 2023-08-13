@@ -197,7 +197,7 @@ class _AdhanHomeState extends State<AdhanHome> {
 Future<void> initBackgourndService(PrayerTimeCalculator ptc) async {
   await BackgroundFetch.configure(
     BackgroundFetchConfig(
-      minimumFetchInterval: 60,
+      minimumFetchInterval: 59,
       stopOnTerminate: false,
       enableHeadless: true,
       requiresBatteryNotLow: false,
