@@ -30,6 +30,7 @@ class PrayerTiming {
   static String get riseName => "Sunrise";
   static String get setName => "Sunset";
 
+  // Grabs information regarding the times of each prayer to create the notifications and base of the PrayerButtons.
   factory PrayerTiming.fromCalculator(
       Map<String, dynamic> j, Preferences prefs, Notif n) {
     Map<String, Object?> m = j;

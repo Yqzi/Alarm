@@ -27,6 +27,8 @@ class _AdhanHomeState extends State<AdhanHome> {
     futureTimings = getLocationAndPrayerTimings();
   }
 
+  /// Uses a permission handler to obtain the location and capablity of displaying notifications,
+  /// thus creating an instance using the permissions to create set each notifications respective to their location.
   Future<PrayerTiming> getLocationAndPrayerTimings() async {
     var location = Location();
     var serviceEnabled = await location.serviceEnabled();
@@ -37,6 +39,7 @@ class _AdhanHomeState extends State<AdhanHome> {
       }
     }
 
+    // Handles permissions regarding location.
     var _permissionGranted = await location.hasPermission();
     if (_permissionGranted == PermissionStatus.denied) {
       _permissionGranted = await location.requestPermission();
@@ -52,7 +55,7 @@ class _AdhanHomeState extends State<AdhanHome> {
           currentLocation.longitude!,
         );
 
-    // other
+    // Handles permissions regarding notifications.
     bool isNotificationAllowed =
         await AwesomeNotifications().isNotificationAllowed();
     if (!isNotificationAllowed) {
@@ -62,6 +65,7 @@ class _AdhanHomeState extends State<AdhanHome> {
 
     initBackgourndService(prayerTimeCalculator!);
     setState(() => isLoading = false);
+    // creates all prayer notifications.
     return await prayerTimeCalculator!.getTimes();
   }
 
@@ -101,22 +105,12 @@ class _AdhanHomeState extends State<AdhanHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFf9f9f9),
       appBar: AppBar(
-        backgroundColor: Color(0xFFf9f9f9),
-        elevation: 0.0,
+        elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "ADHAN",
-          style: TextStyle(color: Colors.black),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.menu,
-            color: Colors.black,
-          ),
-          onPressed: () {},
-        ),
+        title: const Text("ADHAN"),
+        automaticallyImplyLeading: false,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       ),
       body: RefreshIndicator(
         displacement: 20,
@@ -128,8 +122,6 @@ class _AdhanHomeState extends State<AdhanHome> {
         child: ListView(
           children: [
             Container(
-              decoration:
-                  BoxDecoration(border: Border.all(color: Colors.black)),
               padding: const EdgeInsets.all(8),
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: Column(
@@ -217,17 +209,15 @@ Future<void> initBackgourndService(PrayerTimeCalculator ptc) async {
       startOnBoot: true,
     ),
     (String taskId) async {
-      print("NOT HEADLESS - BGF");
       ptc.getTimes();
 
       BackgroundFetch.finish(taskId);
     },
     (String taskId) async {
-      print('TIMEOUT');
       BackgroundFetch.finish(taskId);
     },
   );
 
   await BackgroundFetch.stop();
-  await BackgroundFetch.start().then((value) => print("working $value"));
+  await BackgroundFetch.start();
 }

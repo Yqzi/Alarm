@@ -2,6 +2,7 @@ import 'package:adhan/models/prayer_timing.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+/// Creates a displayable button which controls the respective prayers NotificationStatus.
 class PrayerButton extends StatefulWidget {
   final Prayer prayer;
   final Color? color;
@@ -114,6 +115,7 @@ class _PrayerButtonState extends State<PrayerButton> {
 
 enum NotificationStatus { alarm, notification, mute }
 
+/// Used for setting the NotificationStatus of the prayers, initially by default then later changed to the desired status.
 class _Dialog extends StatefulWidget {
   const _Dialog({
     required this.name,
@@ -194,6 +196,7 @@ class _DialogState extends State<_Dialog> {
   }
 }
 
+/// Selections for the desired NotificationStatus.
 class _CheckBox extends StatelessWidget {
   final String name;
   final bool isSelected;

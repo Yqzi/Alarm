@@ -12,20 +12,24 @@ void main() async {
     null,
     [
       NotificationChannel(
-        channelKey: 'scheduled_channel',
-        channelName: 'Scheduled Notifications',
+        channelKey: 'Prayer_channel',
+        channelName: 'Prayer Channel',
         defaultColor: Colors.teal,
         locked: true,
         importance: NotificationImportance.Max,
         channelShowBadge: true,
         channelDescription: null,
+        defaultPrivacy: NotificationPrivacy.Public,
       ),
     ],
   );
 
   initializeTimeZones();
 
-  runApp(const MaterialApp(home: AdhanHome()));
+  runApp(MaterialApp(
+    home: AdhanHome(),
+    theme: ThemeData.dark(),
+  ));
   BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 }
 
@@ -41,15 +45,11 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
   }
 
   if (isTimeout) {
-    print("[BackgroundFetch] Headless task timed-out: $taskId");
     BackgroundFetch.finish(taskId);
     return;
   }
-  print('[BackgroundFetch] Headless event received. $taskId');
 
   if (taskId == "flutter_background_fetch") {
-    print("Before Location await");
-    print("After Location await");
     final PrayerTimeCalculator prayerTimeCalculator =
         PrayerTimeCalculator.fromCache();
     prayerTimeCalculator.getTimes();
