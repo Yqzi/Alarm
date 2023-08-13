@@ -33,14 +33,14 @@ void main() async {
   BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 }
 
-// Runs a check every 6 hours to initilize new notifications.
+// Runs a check every hour to initilize new notifications.
 @pragma('vm:entry-point')
 void backgroundFetchHeadlessTask(HeadlessTask task) async {
   SharedPreferencesAndroid.registerWith();
   String taskId = task.taskId;
   bool isTimeout = task.timeout;
 
-  if (DateTime.now().hour >= 1) {
+  if (DateTime.now().hour > 1) {
     BackgroundFetch.finish(taskId);
     return;
   }
