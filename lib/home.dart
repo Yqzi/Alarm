@@ -61,7 +61,6 @@ class _AdhanHomeState extends State<AdhanHome> {
     if (!isNotificationAllowed) {
       await showCustomDialog();
     }
-    // done toerh
 
     initBackgourndService(prayerTimeCalculator!);
     setState(() => isLoading = false);
