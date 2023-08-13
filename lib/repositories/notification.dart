@@ -27,7 +27,7 @@ class Notif {
     required int id,
     bool sound = false,
   }) async {
-    // initialize notification if not already initialized
+    // initialize notification if not already initialized.
     _isInitialized = _isInitialized ?? await initializeNotification();
     _and ands = _and(
       'channelID: ' + sound.toString(),
