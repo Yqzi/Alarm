@@ -40,7 +40,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
   String taskId = task.taskId;
   bool isTimeout = task.timeout;
 
-  if (DateTime.now().hour > 1) {
+  if (DateTime.now().hour > 2) {
     BackgroundFetch.finish(taskId);
     return;
   }
